@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrateDigger | Behavioral Curation</title>
+        <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <h1>CrateDigger</h1>
+            </div>
+            <div class="header-controls">
+                <input type="text" id="usernameInput" placeholder="Discogs Username">
+                <button onclick="fetchCollection()">Load Collection</button>
+            </div>
+        </header>
+
+        <main class="results">
+            <section class="main">
+                <section class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search collection..." oninput="applyFilters()">
+                    
+                    <div id="sortOptions">
+                        <button class="sort-btn active" data-sort="added" onclick="handleSortClick(this)">
+                            Date Added <span class="sort-arrow">↑</span>
+                        </button>
+                        <button class="sort-btn" data-sort="artist" onclick="handleSortClick(this)">
+                            Artist <span class="sort-arrow"></span>
+                        </button>
+                        <button class="sort-btn" data-sort="title" onclick="handleSortClick(this)">
+                            Title <span class="sort-arrow"></span>
+                        </button>
+                        <button class="sort-btn" data-sort="year" onclick="handleSortClick(this)">
+                            Release Year <span class="sort-arrow"></span>
+                        </button>
+                    </div>
+                </section>
+                <div id="resultsArea" class="results-grid"></div>
+                <div id="loadingSentinel" style="height: 20px; width: 100%;"></div>
+            </section>
+        </main>
+
+        <aside class="sidebar">
+            <h2>How are you doing today?</h2>
+            <!-- MOOD FILTER -->
+            <section class="sidebar-section">
+                <h2 class="sidebar-heading">Filter by Mood</h2>
+                <div class="mood-filter-grid">
+                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😤 Stressed</button>
+                    <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
+                    <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
+                    <button class="mood-filter-btn" data-mood="anxious"   onclick="handleMoodFilterClick(this)">😰 Anxious</button>
+                    <button class="mood-filter-btn" data-mood="neutral"   onclick="handleMoodFilterClick(this)">😐 Neutral</button>
+                    <button class="mood-filter-btn" data-mood="calm"      onclick="handleMoodFilterClick(this)">😌 Calm</button>
+                    <button class="mood-filter-btn" data-mood="sad"       onclick="handleMoodFilterClick(this)">😔 Sad</button>
+                </div>
+            </section>
+
+            <hr class="sidebar-divider">
+
+            <!-- RECOMMENDER -->
+            <section class="sidebar-section">
+                <h2 class="sidebar-heading">What should I spin?</h2>
+
+                <label class="sidebar-label">How are you feeling?</label>
+                <select id="recommendMoodSelect" class="sidebar-select">
+                    <option value="stressed">😤 Stressed</option>
+                    <option value="happy">😊 Happy</option>
+                    <option value="tired">😴 Tired</option>
+                    <option value="anxious">😰 Anxious</option>
+                    <option value="neutral" selected>😐 Neutral</option>
+                    <option value="calm">😌 Calm</option>
+                    <option value="sad">😔 Sad</option>
+                </select>
+
+                <label class="sidebar-label">What's the weather like?</label>
+                <select id="recommendWeatherSelect" class="sidebar-select">
+                    <option value="">— no preference —</option>
+                    <option value="sunny">☀️ Sunny</option>
+                    <option value="cloudy">☁️ Cloudy</option>
+                    <option value="rainy">🌧️ Rainy</option>
+                    <option value="stormy">⛈️ Stormy</option>
+                    <option value="snowy">❄️ Snowy</option>
+                    <option value="warm">🌤️ Warm</option>
+                    <option value="cold">🧊 Cold</option>
+                </select>
+
+                <button class="sidebar-recommend-btn" onclick="getRecommendation()">
+                    Recommend a Record
+                </button>
+
+                <div id="recommendationResult" class="recommendation-result"></div>
+            </section>
+        </aside>
+        <script src="script.js"></script>
+    </div>
+
+    <div id="preSessionModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeAllModals()">&times;</span>
+            <h2>Start Session</h2>
+            <img id="modalAlbumCover" src="" alt="Album Cover">
+            <p id="modalAlbumTitle"></p>
+            <p><strong>Year:</strong> <span id="modalYear"></span></p>
+            <p><strong>Genres:</strong> <span id="modalGenres"></span></p>
+            <div id="modalTracklist"></div>
+
+            <label>How are you feeling right now?</label>
+            <select id="preEmotion">
+                <option value="stressed">😤 Stressed</option>
+                <option value="happy">😊 Happy</option>
+                <option value="tired">😴 Tired</option>
+                <option value="anxious">😰 Anxious</option>
+                <option value="neutral">😐 Neutral</option>
+                <option value="calm">😌 Calm</option>
+                <option value="sad">😔 Sad</option>
+            </select>
+            <button onclick="startActiveSession()">Begin Listening</button>
+        </div>
+    </div>
+
+    <div id="activeSessionModal" class="modal" style="display:none;">
+        <div class="modal-content text-center">
+            <h2>Now Spinning</h2>
+            <p id="activeAlbumTitle" style="font-weight:bold;"></p>
+            
+            <div id="recordGraphic" class="record">
+                <div class="record-label"></div>
+            </div>
+
+            <div class="timer-container">
+                <div class="side-timer">
+                    <h3>Side A</h3>
+                    <div id="timeA" class="time-display">00:00</div>
+                    <button id="btnA" onclick="toggleTimer('A')">Start</button>
+                </div>
+                <div class="side-timer">
+                    <h3>Side B</h3>
+                    <div id="timeB" class="time-display">00:00</div>
+                    <button id="btnB" onclick="toggleTimer('B')">Start</button>
+                </div>
+            </div>
+            
+            <button class="end-btn" onclick="endActiveSession()">End Session</button>
+        </div>
+    </div>
+
+    <div id="postSessionModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Session Complete</h2>
+            <p>Total Time: <span id="totalTimeDisplay"></span></p>
+            
+            <label>How are you feeling now?</label>
+            <select id="postEmotion">
+                <option value="stressed">😤 Stressed</option>
+                <option value="happy">😊 Happy</option>
+                <option value="tired">😴 Tired</option>
+                <option value="anxious">😰 Anxious</option>
+                <option value="neutral">😐 Neutral</option>
+                <option value="calm">😌 Calm</option>
+                <option value="sad">😔 Sad</option>
+            </select>
+            <button onclick="submitFinalSession()">Save to Database</button>
+        </div>
+    </div>
+</body>
+</html>
