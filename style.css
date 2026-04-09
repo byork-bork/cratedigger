@@ -1,8 +1,12 @@
+/* ===================== BASE ===================== */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap');
+
 body { 
-    font-family: 'Inter', sans-serif; 
+    font-family: 'DM Sans', sans-serif; 
     background: #f4f1ea; 
     color: #333; 
     padding: 10px; 
+    margin: 0;
 }
 
 html, body {
@@ -10,6 +14,261 @@ html, body {
     overflow: hidden;
 }
 
+/* ===================== LOGIN OVERLAY ===================== */
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(30, 25, 18, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: opacity 0.5s ease;
+}
+
+.login-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.login-card {
+    background: #faf8f3;
+    border-radius: 16px;
+    padding: 48px 44px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    animation: loginCardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes loginCardIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.login-logo-icon {
+    font-size: 28px;
+    color: #333;
+    line-height: 1;
+    animation: spin 8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.login-logo h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.login-tagline {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 32px;
+    letter-spacing: 0.01em;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.login-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 16px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    border: 1.5px solid #d8d3c8;
+    border-radius: 8px;
+    background: #fff;
+    color: #222;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-input:focus {
+    border-color: #333;
+    box-shadow: 0 0 0 3px rgba(51,51,51,0.08);
+}
+
+.login-input.error {
+    border-color: #c0392b;
+}
+
+.login-error {
+    font-size: 12.5px;
+    color: #c0392b;
+    font-weight: 500;
+    margin-top: -4px;
+}
+
+.login-btn {
+    margin-top: 6px;
+    padding: 14px;
+    background: #222;
+    color: #f4f1ea;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.login-btn:hover {
+    background: #444;
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+.login-btn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+}
+
+.login-spinner {
+    animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+
+.login-footer {
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 24px;
+    margin-bottom: 0;
+}
+
+.logout-confirm-content {
+    width: 340px;
+    gap: 0;
+    padding: 2rem 2rem 1.5rem;
+}
+
+.logout-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fdecea;
+    color: #c0392b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.logout-confirm-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: #222;
+}
+
+.logout-confirm-body {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.5;
+    margin: 0 0 24px;
+}
+
+.logout-confirm-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.logout-cancel-btn {
+    flex: 1;
+    padding: 9px 0;
+    font-size: 14px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: #333;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s;
+}
+
+.logout-cancel-btn:hover { background: #f0f0f0; }
+
+.logout-confirm-btn {
+    flex: 1;
+    padding: 9px 0;
+    font-size: 14px;
+    border-radius: 8px;
+    background: #fdecea;
+    border: 1px solid #e8b4b1;
+    color: #c0392b;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    transition: background 0.15s;
+}
+
+.logout-confirm-btn:hover { background: #f9d5d3; }
+
+a {
+  color: inherit;          /* uses the same color as surrounding text */
+  text-decoration: underline;
+}
+
+/* ===================== APP LOCK STATE ===================== */
+.app-locked {
+    filter: blur(4px);
+    pointer-events: none;
+    user-select: none;
+    transition: filter 0.5s ease;
+}
+
+.app-unlocked {
+    filter: none;
+    pointer-events: auto;
+    user-select: auto;
+}
+
+/* ===================== CONTAINER ===================== */
 .container {
     height: 100vh;
     display: grid;
@@ -20,6 +279,7 @@ html, body {
         "results sidebar";
 }
 
+/* ===================== HEADER ===================== */
 header {
     grid-area: header;
     border-radius: 10px;
@@ -30,29 +290,58 @@ header {
     justify-content: space-between;
     align-items: center;
 }
-.header-controls {
+
+.header-left {
     display: flex;
+    align-items: center;
     gap: 10px;
 }
-.header-controls input {
-    width: 200px; /* Slimmer input for the header */
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-}
-.header-controls button {
-    padding: 8px 15px;
-    background-color: #f4f1ea;
-    color: #333;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-}
-.header-controls button:hover {
-    background-color: #ddd;
+
+.header-logo-icon {
+    font-size: 20px;
+    color: #f4f1ea;
+    animation: spin 10s linear infinite;
+    display: inline-block;
 }
 
+.header-left h1 {
+    font-family: 'Playfair Display', serif;
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+}
+
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-username-label {
+    font-size: 13px;
+    color: #ccc;
+    font-weight: 500;
+}
+
+.header-logout-btn {
+    padding: 6px 14px;
+    background: transparent;
+    color: #f4f1ea;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.header-logout-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.5);
+}
+
+/* ===================== MAIN / RESULTS ===================== */
 .main {
     grid-area: results;
     display: flex;
@@ -122,20 +411,65 @@ button {
     overflow-y: auto;
 }
 
+/* 1. Hide the scrollbar by default for a clean look */
+.results-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* 2. The "Full Span" Track: make it completely transparent */
+.results-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 3. The "Moving Bar" (Thumb): visible only on hover */
+.results-grid::-webkit-scrollbar-thumb {
+    background: transparent; /* Invisible initially */
+    border-radius: 10px;
+    border: 2px solid transparent; /* Creates padding around the bar */
+    background-clip: content-box;
+}
+
+/* 4. Only show the thumb when hovering over the grid area */
+.results-grid:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2); /* Soft grey thumb */
+}
+
+/* 5. Make it slightly darker when the user actually grabs it */
+.results-grid::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Firefox Support (Standard property) */
+.results-grid {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.results-grid:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* ===================== CARDS ===================== */
 .card {
     background: rgb(255, 255, 255);
     padding: 5px; 
     border-radius: 8px; 
-    /*box-shadow: 0 4px 6px rgba(0,0,0,0.1); */
     text-align: center;
-    transition: transform 0.2s;
+    position: relative;
+    cursor: pointer;
     opacity: 0;
     transform: translateY(10px);
     animation: fadeIn 0.4s ease forwards;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                box-shadow 0.3s ease, 
+                filter 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transform: translateY(-8px) scale(1.1);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    z-index: 10;
 }
 .card img { 
     max-width: 100%; 
@@ -155,19 +489,12 @@ button {
     }
 }
 
-/* Stagger effect for left → right loading */
-.card:nth-child(odd) {
-    animation-delay: 0.05s;
-}
-.card:nth-child(even) {
-    animation-delay: 0.1s;
-}
+.card:nth-child(odd) { animation-delay: 0.05s; }
+.card:nth-child(even) { animation-delay: 0.1s; }
 
-/* Sentinel spacing */
-#scrollSentinel {
-    height: 40px;
-}
+#scrollSentinel { height: 40px; }
 
+/* ===================== SIDEBAR ===================== */
 .sidebar {
     grid-area: sidebar;
     border-radius: 10px;
@@ -175,65 +502,10 @@ button {
     height: 77vh;
     background: #ddd;
     margin-top: 20px;
-}
-
-/* style.css (Add to bottom) */
-.modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex;
-    justify-content: center; align-items: center; z-index: 1000;
-}
-.modal-content {
-    background: white; padding: 20px; border-radius: 8px;
-    width: 300px; display: flex; flex-direction: column; gap: 10px;
-}
-.close {
-    align-self: flex-end; cursor: pointer; font-weight: bold; font-size: 1.2rem;
-}
-
-/* ---- CARD MOOD TAG ---- */
-.card {
-    position: relative; /* needed for absolute badge positioning */
-}
-
-.card-mood-tag {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 999px;
-    text-transform: capitalize;
-    z-index: 1;
-    background: #555;
-    color: white;
-    display: none; /* hidden until a mood is set */
-}
-
-.card-mood-tag:not(:empty) {
-    display: block;
-}
-
-/* Per-mood colours */
-.mood-happy     { background: #f5a623; color: #fff; }
-.mood-calm      { background: #5b9bd5; color: #fff; }
-.mood-energized { background: #e94f37; color: #fff; }
-.mood-focused   { background: #44bba4; color: #fff; }
-.mood-stressed  { background: #c0392b; color: #fff; }
-.mood-anxious   { background: #8e44ad; color: #fff; }
-.mood-tired     { background: #7f8c8d; color: #fff; }
-.mood-sad       { background: #2980b9; color: #fff; }
-.mood-neutral   { background: #95a5a6; color: #fff; }
-
-/* ---- SIDEBAR ---- */
-.sidebar {
     overflow-y: auto;
 }
 
-.sidebar-section {
-    margin-bottom: 8px;
-}
+.sidebar-section { margin-bottom: 8px; }
 
 .sidebar-heading {
     font-size: 14px;
@@ -283,11 +555,9 @@ button {
     transition: background 0.2s;
 }
 
-.sidebar-recommend-btn:hover {
-    background: #555;
-}
+.sidebar-recommend-btn:hover { background: #555; }
 
-/* ---- MOOD FILTER GRID ---- */
+/* ===================== MOOD FILTER ===================== */
 .mood-filter-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -305,17 +575,45 @@ button {
     color: #333;
 }
 
-.mood-filter-btn:hover {
-    background: #eee;
-}
-
+.mood-filter-btn:hover { background: #eee; }
 .mood-filter-btn.selected {
     background: #333;
     color: white;
     border-color: #333;
 }
 
-/* ---- RECOMMENDATION RESULT ---- */
+/* ===================== MOOD TAGS ===================== */
+.card-mood-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 1;
+}
+
+.mood-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    text-transform: capitalize;
+    color: white;
+    background: #555;
+    width: fit-content;
+}
+
+.card-mood-tag:not(:empty) { display: block; }
+
+.mood-happy     { background: #f5a623; color: #fff; }
+.mood-calm      { background: #5b9bd5; color: #fff; }
+.mood-stressed  { background: #c0392b; color: #fff; }
+.mood-tired     { background: #7f8c8d; color: #fff; }
+.mood-sad       { background: #2980b9; color: #fff; }
+.mood-neutral   { background: #95a5a6; color: #fff; }
+
+/* ===================== RECOMMENDATION ===================== */
 .recommendation-result {
     margin-top: 12px;
     min-height: 40px;
@@ -338,7 +636,7 @@ button {
     height: 56px;
     border-radius: 4px;
     object-fit: cover;
-    opacity: 1; /* override the lazy-load default */
+    opacity: 1;
 }
 
 .recommendation-info {
@@ -367,4 +665,333 @@ button {
 .rec-empty {
     font-style: italic;
     color: #999;
+}
+
+.rec-clear-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 7px;
+    background: transparent;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, color 0.15s;
+}
+
+.rec-clear-btn:hover {
+    background: #f0f0f0;
+    color: #444;
+}
+
+/* ===================== SESSION MODALS ===================== */
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex;
+    justify-content: center; align-items: center; z-index: 1000;
+}
+.modal-content {
+    background: white; padding: 20px; border-radius: 8px;
+    width: 300px; display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ===================== PRE-SESSION MODAL ===================== */
+.pre-session-content {
+    width: 800px;
+    max-width: 95vw;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.pre-session-content > .close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 10;
+    color: #999;
+    font-size: 1.3rem;
+}
+
+.pre-session-grid {
+    display: grid;
+    grid-template-columns: 270px 1fr 1fr;
+    min-height: 300px;
+}
+
+.pre-col {
+    padding: 20px;
+}
+
+.pre-col-left {
+    border-right: 1px solid #e8e4db;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pre-col-mid {
+    border-right: 1px solid #e8e4db;
+}
+
+.pre-col-right {
+    overflow-y: auto;
+    max-height: 340px;
+}
+
+.pre-col-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #aaa;
+    margin: 0 0 12px;
+}
+
+.pre-cover {
+    width: 100%; 
+    aspect-ratio: 1/1;
+    border-radius: 6px;
+    object-fit: cover;
+    opacity: 1 !important; /* override lazy-load default */
+}
+
+.pre-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.pre-artist {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+}
+
+.pre-year-badge {
+    font-size: 12px;
+    background: #f0ece3;
+    color: #666;
+    padding: 3px 10px;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+/* Genre pills */
+.pre-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.genre-pill {
+    font-size: 12px;
+    background: #e8f0fb;
+    color: #1a5fa8;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+/* Tracklist rows */
+.pre-tracklist {
+    display: flex;
+    flex-direction: column;
+}
+
+.track-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 0.5px solid #ede9e0;
+    font-size: 13px;
+    gap: 8px;
+}
+
+.track-row:last-child {
+    border-bottom: none;
+}
+
+.track-position {
+    color: #bbb;
+    min-width: 26px;
+    font-size: 12px;
+}
+
+.track-title {
+    flex: 1;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-duration {
+    color: #aaa;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* Footer bar */
+.pre-session-footer {
+    padding: 14px 20px;
+    border-top: 1px solid #e8e4db;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #faf8f3;
+}
+
+.pre-listen-btn {
+    background: #222;
+    color: #faf8f3;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.pre-listen-btn:hover { background: #444; }
+
+.pre-close-link {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+}
+
+.pre-close-link:hover { color: #666; }
+
+/* ---- Step 2: Mood ---- */
+.pre-mood-step {
+    padding: 24px 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    animation: slideInRight 0.25s ease forwards;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.pre-mood-album-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e8e4db;
+}
+
+.pre-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    opacity: 1 !important;
+}
+
+.pre-mood-album-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+}
+
+.pre-mood-album-sub {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+}
+
+.pre-mood-question {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.pre-mood-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.pre-mood-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #444;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.pre-mood-option:has(input:checked) {
+    border-color: #333;
+    background: #f4f1ea;
+    color: #222;
+    font-weight: 600;
+}
+
+.pre-mood-option input[type="radio"] {
+    accent-color: #333;
+    width: auto;
+    padding: 0;
+}
+
+.pre-mood-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 4px;
+}
+
+.pre-back-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+}
+
+.pre-back-btn:hover { color: #666; }
+
+.pre-start-btn {
+    background: #222;
+    color: #faf8f3;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.pre-start-btn:hover { background: #444; }
+
+.close {
+    align-self: flex-end; cursor: pointer; font-weight: bold; font-size: 1.2rem;
 }

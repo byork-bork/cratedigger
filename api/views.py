@@ -5,7 +5,8 @@ from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Album, ListeningSession, MoodTag
+from django.contrib.auth.models import User
+from .models import Album, ListeningSession, MoodTag, UserProfile
 from .serializers import ListeningSessionSerializer
 from .recommender import recommend_album
 from dotenv import load_dotenv
@@ -18,16 +19,37 @@ DISCOGS_HEADERS = {
     'User-Agent': 'CrateDiggerApp/1.0'
 }
 
-@api_view(['GET'])
-def get_collection(request, username):
-    """Proxies the request to Discogs"""
+
+@api_view(['POST'])
+def login_user(request):
+    """
+    Looks up or creates a user by their Discogs username, and fetches their collection.
+    
+    Request body:
+        { "discogs_username": "vinyl_nerd_42" }
+
+    Returns:
+        { 
+            "user": { "id": 1, ... },
+            "releases": [ ... ] 
+        }
+    """
+    discogs_username = request.data.get('discogs_username', '').strip()
+    
+    # You can still allow sorting to be passed via the request if needed
     sort = request.GET.get('sort', 'added')
 
-    url = f"https://api.discogs.com/users/{username}/collection/folders/0/releases"
+    if not discogs_username:
+        return Response(
+            {'error': 'discogs_username is required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     all_releases = []
     page = 1
+    url = f"https://api.discogs.com/users/{discogs_username}/collection/folders/0/releases"
 
+    # 1. Fetch the collection (which also validates the username)
     try:
         while True:
             params = {
@@ -36,7 +58,15 @@ def get_collection(request, username):
                 'sort': sort,
                 'sort_order': 'desc'
             }
-            response = requests.get(url, headers=DISCOGS_HEADERS, params=params)
+            response = requests.get(url, headers=DISCOGS_HEADERS, params=params, timeout=30)
+            
+            # If the user doesn't exist, Discogs returns a 404 on the collection endpoint
+            if response.status_code == 404:
+                return Response(
+                    {'error': f'Username "{discogs_username}" not found on Discogs.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
             response.raise_for_status()
             data = response.json()
             
@@ -47,21 +77,42 @@ def get_collection(request, username):
                 break
 
             page += 1
-            
-        return Response({'releases': all_releases})
-    
+
     except requests.exceptions.RequestException as e:
-        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response(
+            {'error': f'Could not fetch collection or verify username: {str(e)}'},
+            status=status.HTTP_502_BAD_GATEWAY
+        )
+
+    # 2. If we made it here, the user is valid. Get or create Django models.
+    user, user_created = User.objects.get_or_create(
+        username=discogs_username,
+        defaults={'email': ''}
+    )
+
+    profile, _ = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={'discogs_username': discogs_username}
+    )
+
+    # 3. Return both the user context and the collection data
+    return Response({
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'discogs_username': profile.discogs_username,
+            'created': user_created,
+        },
+        'releases': all_releases
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 def get_release_details(request, release_id):
     """
-    Fetches full release details from Discogs for a single album:
-    genres, styles, tracklist, year, labels, etc.
-    Called when the user clicks on a card (openModal).
+    Fetches full release details from Discogs for a single album.
     Results are cached in the DB after the first fetch.
     """
-    # Check if we already have rich data cached for this release
     try:
         album = Album.objects.get(discogs_id=release_id)
         if album.genres or album.styles or album.tracklist:
@@ -72,9 +123,8 @@ def get_release_details(request, release_id):
                 'year':      album.year,
             })
     except Album.DoesNotExist:
-        pass  # Not saved yet — that's fine, we'll fetch and cache below
+        pass
 
-    # Fetch from Discogs
     try:
         url = f"https://api.discogs.com/releases/{release_id}"
         response = requests.get(url, headers=DISCOGS_HEADERS)
@@ -91,10 +141,9 @@ def get_release_details(request, release_id):
                 'duration': track.get('duration', ''),
             }
             for track in data.get('tracklist', [])
-            if track.get('type_') != 'heading'   # skip section headers
+            if track.get('type_') != 'heading'
         ]
 
-        # Cache the details if the album already exists in our DB
         Album.objects.filter(discogs_id=release_id).update(
             genres=genres,
             styles=styles,
@@ -112,12 +161,12 @@ def get_release_details(request, release_id):
     except requests.exceptions.RequestException as e:
         return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['POST'])
 def log_session(request):
     """
     Logs a listening session. Creates the Album row if it doesn't exist yet.
-    ListeningSession.save() handles auto-assigning mood_tag and
-    incrementing the MoodTag tally.
+    Accepts an optional user_id to link the session to a user.
     """
     data = request.data
     
@@ -130,17 +179,28 @@ def log_session(request):
         }
     )
 
+    # Resolve user from user_id if provided
+    user = None
+    user_id = data.get('user_id')
+    if user_id:
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            pass
+
     now = timezone.now()
     
     session = ListeningSession.objects.create(
-        album=album,
-        pre_emotion=data['pre_emotion'],
-        post_emotion=data['post_emotion'],
-        side_a_duration=data['side_a_duration'],
-        side_b_duration=data['side_b_duration'],
-        day_of_week=now.weekday(),
-        hour_of_day=now.hour,
-        month=now.month,
+        album           = album,
+        user            = user,
+        pre_emotion     = data['pre_emotion'],
+        post_emotion    = data['post_emotion'],
+        side_a_duration = data['side_a_duration'],
+        side_b_duration = data['side_b_duration'],
+        day_of_week     = now.weekday(),
+        hour_of_day     = now.hour,
+        month           = now.month,
+        weather         = data.get('weather'),
     )
     
     mood_tag, created = MoodTag.objects.get_or_create(
@@ -154,46 +214,54 @@ def log_session(request):
     
     return Response(ListeningSessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
-@api_view(['GET'])
+
+@api_view(['POST'])
 def get_recommendation(request):
     """
     Returns a recommended album based on mood and optional context.
-    
+
     Query params:
-        mood    (required) — e.g. 'calm', 'happy'
-        weather (optional) — e.g. 'rainy', 'sunny'
+        mood    (required)
+        weather (optional)
     """
+    data       = request.data
     mood    = request.GET.get('mood')
     weather = request.GET.get('weather')
+    user_id = request.GET.get('user_id')
+    collection = data.get('collection', [])  # list of {discogs_id, title, artist, cover_url, genres, styles}
 
     if not mood:
         return Response({'error': 'mood parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    user  = request.user if request.user.is_authenticated else None
-    album = recommend_album(user=user, mood=mood, weather=weather, now=timezone.now())
+    if not collection:
+        return Response({'recommendation': None, 'message': 'No collection provided.'})
 
-    if not album:
-        return Response({
-            'recommendation': None,
-            'message': 'Not enough listening history yet.'
-        })
+    user = None
+    if user_id:
+        try:
+            from django.contrib.auth.models import User
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            pass
 
-    return Response({
-        'recommendation': {
-            'id':        album.discogs_id,
-            'title':     album.title,
-            'artist':    album.artist,
-            'cover_url': album.cover_url,
-            'mood_tag':  album.dominant_mood(),
-        }
-    })
+    result = recommend_album(
+        user=user,
+        mood=mood,
+        weather=weather,
+        collection=collection,
+        now=timezone.now(),
+    )
+
+    if not result:
+        return Response({'recommendation': None, 'message': 'No matching records found.'})
+
+    return Response({'recommendation': result})
 
 
 @api_view(['GET'])
 def get_mood_tags(request):
     """
     Returns all MoodTag tallies for a given album.
-    Useful for displaying mood badge(s) on a card.
 
     Query params:
         discogs_id (required)

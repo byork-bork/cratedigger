@@ -1,13 +1,111 @@
-let allReleases = []; // Store the full collection here
+// ===================== APP STATE =====================
+let currentUser = null; // { id, username, discogs_username }
+let allReleases = [];
 let sortDirection = 'asc';
 let lastSortValue = 'added';
+let recommendedFilterIds = null; // null = no filter active
 
-// ---------------- FETCH ----------------
-async function fetchCollection() {
-    const username = document.getElementById('usernameInput').value;
+// ===================== LOGIN =====================
+async function handleLogin() {
+    const input = document.getElementById('loginUsernameInput');
+    const errorEl = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('loginBtnText');
+    const spinner = document.getElementById('loginBtnSpinner');
+
+    const username = input.value.trim();
+
+    // Clear error state
+    input.classList.remove('error');
+    errorEl.style.display = 'none';
+
+    if (!username) {
+        showLoginError('Please enter your Discogs username.');
+        return;
+    }
+
+    // Loading state
+    btn.disabled = true;
+    btnText.textContent = 'Loading...';
+    spinner.style.display = 'inline';
+
+    try {
+        const res = await fetch('http://localhost:8000/api/login/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ discogs_username: username })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            showLoginError(data.error || 'Could not connect. Is the server running?');
+            return;
+        }
+
+        // Success — store user and unlock app
+        currentUser = data.user;
+        unlockApp(currentUser.discogs_username);
+
+        // Directly store the releases from the login response and display them
+        allReleases = data.releases;
+        applyFilters();
+
+    } catch (err) {
+        showLoginError('Could not connect to server. Make sure Django is running.');
+    } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Dig In';
+        spinner.style.display = 'none';
+    }
+}
+
+function showLoginError(msg) {
+    const input = document.getElementById('loginUsernameInput');
+    const errorEl = document.getElementById('loginError');
+    input.classList.add('error');
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+}
+
+function unlockApp(username) {
+    // Hide login overlay
+    const overlay = document.getElementById('loginModal');
+    overlay.classList.add('hidden');
+
+    // Remove blur from app
+    const app = document.getElementById('appContainer');
+    app.classList.remove('app-locked');
+    app.classList.add('app-unlocked');
+
+    // Show username in header
+    document.getElementById('headerUsernameDisplay').textContent = username;
+    document.getElementById('headerUser').style.display = 'flex';
+
+    // Remove overlay from DOM after transition
+    setTimeout(() => overlay.remove(), 500);
+}
+
+// Replace the existing handleLogout() with this:
+function handleLogout() {
+    document.getElementById('logoutConfirmModal').style.display = 'flex';
+}
+
+function closeLogoutModal() {
+    document.getElementById('logoutConfirmModal').style.display = 'none';
+}
+
+// Rename the old logout logic to confirmLogout():
+function confirmLogout() {
+    currentUser = null;
+    allReleases = [];
+    document.getElementById('resultsArea').innerHTML = '';
+    location.reload();
+}
+
+// ===================== FETCH COLLECTION =====================
+async function fetchCollection(username) {
     const resultsArea = document.getElementById('resultsArea');
-    if (!username) return alert("Please enter a username");
-
     resultsArea.innerHTML = '<p>Digging through the crates...</p>';
 
     try {
@@ -16,7 +114,7 @@ async function fetchCollection() {
 
         if (data.releases) {
             allReleases = data.releases;
-            applyFilters(); 
+            applyFilters();
         } else {
             resultsArea.innerHTML = '<p>No records found.</p>';
         }
@@ -25,7 +123,7 @@ async function fetchCollection() {
     }
 }
 
-// ---------------- DISPLAY ----------------
+// ===================== DISPLAY =====================
 function displayResults(releases) {
     const resultsArea = document.getElementById('resultsArea');
     resultsArea.innerHTML = '';
@@ -52,15 +150,12 @@ function displayResults(releases) {
         resultsArea.appendChild(card);
     });
 
-    // 🔥 Activate lazy loading AFTER rendering
     initImageLazyLoad();
     loadMoodTags();
 }
 
-// ---------------- MOOD TAGS ON CARDS ----------------
+// ===================== MOOD TAGS =====================
 async function loadMoodTags() {
-    // Fetch mood tags for every album currently in allReleases
-    // and paint the badge onto the card if one exists
     for (const item of allReleases) {
         const id = item.basic_information.id;
         try {
@@ -81,7 +176,7 @@ function renderMoodTags(discogsId, moodTags) {
     ).join('');
 }
 
-// ---------------- FILTERS ----------------
+// ===================== FILTERS =====================
 function applyFilters() {
     let filtered = [...allReleases];
 
@@ -96,20 +191,23 @@ function applyFilters() {
         });
     }
 
-    // Mood filter from sidebar
     const activeMoodFilter = document.querySelector('.mood-filter-btn.selected');
     if (activeMoodFilter) {
         const filterMood = activeMoodFilter.dataset.mood;
         filtered = filtered.filter(item => {
             const tagEl = document.getElementById(`mood-tag-${item.basic_information.id}`);
             if (!tagEl) return false;
-            // Check if ANY badge on this card matches the filter
             return Array.from(tagEl.querySelectorAll('.mood-badge'))
                 .some(badge => badge.textContent === filterMood);
         });
     }
+    // Recommendation filter
+    if (recommendedFilterIds !== null) {
+        filtered = filtered.filter(item =>
+            recommendedFilterIds.includes(item.basic_information.id)
+        );
+    }
 
-    // Sort using lastSortValue and sortDirection instead of the old select
     filtered.sort((a, b) => {
         const infoA = a.basic_information;
         const infoB = b.basic_information;
@@ -122,13 +220,14 @@ function applyFilters() {
         } else if (lastSortValue === 'year') {
             comparison = (infoA.year || 0) - (infoB.year || 0);
         } else if (lastSortValue === 'added') {
-            comparison = a._index - b._index;
+            const dateA = new Date(a.date_added);
+            const dateB = new Date(b.date_added);
+            comparison = dateB - dateA;
         }
-        // 'added' keeps original order (comparison stays 0)
 
         return sortDirection === 'asc' ? comparison : -comparison;
     });
-
+    
     displayResults(filtered);
 }
 
@@ -136,15 +235,12 @@ function handleSortClick(btn) {
     const newSort = btn.dataset.sort;
 
     if (newSort === lastSortValue) {
-        // Same option clicked — toggle direction
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-        // New option — reset to ascending
         sortDirection = 'asc';
         lastSortValue = newSort;
     }
 
-    // Update arrow indicators
     document.querySelectorAll('.sort-btn').forEach(b => {
         b.classList.remove('active');
         b.querySelector('.sort-arrow').textContent = '';
@@ -155,40 +251,53 @@ function handleSortClick(btn) {
     applyFilters();
 }
 
-// ---------------- SIDEBAR: MOOD FILTER ----------------
+// ===================== MOOD FILTER =====================
 function handleMoodFilterClick(btn) {
     const already = btn.classList.contains('selected');
-
-    // Deselect all
     document.querySelectorAll('.mood-filter-btn').forEach(b => b.classList.remove('selected'));
-
-    if (!already) {
-        btn.classList.add('selected');
-    }
-
+    if (!already) btn.classList.add('selected');
     applyFilters();
 }
 
-// ---------------- SIDEBAR: RECOMMENDATION ----------------
+// ===================== RECOMMENDATION =====================
 async function getRecommendation() {
-    const moodSelect = document.getElementById('recommendMoodSelect');
-    const weatherSelect = document.getElementById('recommendWeatherSelect');
+    const mood     = document.getElementById('recommendMoodSelect').value;
+    const weather = document.getElementById('recommendWeatherSelect').value || null;
     const resultArea = document.getElementById('recommendationResult');
-
-    const mood = moodSelect.value;
-    const weather = weatherSelect.value;
 
     resultArea.innerHTML = '<p>Finding the perfect record...</p>';
 
     try {
-        const params = new URLSearchParams({ mood });
-        if (weather) params.append('weather', weather);
+        // Send the current collection so the recommender can score
+        // albums directly without needing them pre-saved in the DB
+        const collectionSnapshot = allReleases.map(item => ({
+            discogs_id: item.basic_information.id,
+            title:      item.basic_information.title,
+            artist:     item.basic_information.artists?.[0]?.name || '',
+            cover_url:  item.basic_information.cover_image,
+            genres:     item.basic_information.genres  || [],
+            styles:     item.basic_information.styles  || [],
+        }));
 
-        const res = await fetch(`http://localhost:8000/api/recommend/?${params}`);
+        const body = {
+            mood,
+            weather:    weather || null,
+            user_id:    currentUser?.id || null,
+            collection: collectionSnapshot,
+        };
+
+        const res  = await fetch('http://localhost:8000/api/recommend/', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(body),
+        });
         const data = await res.json();
 
         if (data.recommendation) {
             const r = data.recommendation;
+            recommendedFilterIds = [r.discogs_id];
+            applyFilters();
+
             resultArea.innerHTML = `
                 <div class="recommendation-card">
                     <img src="${r.cover_url}" alt="${r.title}"
@@ -196,9 +305,11 @@ async function getRecommendation() {
                     <div class="recommendation-info">
                         <p class="rec-title">${r.title}</p>
                         <p class="rec-artist">${r.artist}</p>
-                        ${r.mood_tag ? `<span class="card-mood-tag mood-${r.mood_tag}">${r.mood_tag}</span>` : ''}
                     </div>
                 </div>
+                <button class="rec-clear-btn" onclick="clearRecommendationFilter()">
+                    ✕ Clear filter
+                </button>
             `;
         } else {
             resultArea.innerHTML = `<p class="rec-empty">${data.message || 'No recommendation available.'}</p>`;
@@ -208,7 +319,13 @@ async function getRecommendation() {
     }
 }
 
-// ---------------- LAZY IMAGE LOADING ----------------
+function clearRecommendationFilter() {
+    recommendedFilterIds = null;
+    applyFilters();
+    document.getElementById('recommendationResult').innerHTML = '';
+}
+
+// ===================== LAZY IMAGE LOAD =====================
 function initImageLazyLoad() {
     const images = document.querySelectorAll("img[data-src]");
 
@@ -216,33 +333,26 @@ function initImageLazyLoad() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
-
-                img.onload = () => {
-                    img.classList.add("loaded");
-                };
-
-                img.src = img.dataset.src; // load real image
+                img.onload = () => img.classList.add("loaded");
+                img.src = img.dataset.src;
                 img.removeAttribute("data-src");
-
                 obs.unobserve(img);
             }
         });
     }, {
-        root: document.getElementById('resultsArea'), // IMPORTANT for inner scroll
+        root: document.getElementById('resultsArea'),
         threshold: 0.1
     });
 
     images.forEach(img => observer.observe(img));
 }
 
-// ---------------- ENTER KEY ----------------
-document.getElementById('usernameInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        fetchCollection();
-    }
+// ===================== ENTER KEY on login =====================
+document.getElementById('loginUsernameInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleLogin();
 });
 
-// ---------------- SESSION STATE ----------------
+// ===================== SESSION STATE =====================
 let currentSessionData = {
     album: null,
     preEmotion: "",
@@ -254,33 +364,49 @@ let currentSessionData = {
 let activeInterval = null;
 let runningSide = null;
 
-// ---------------- MODAL 1 ----------------
+// ===================== MODAL 1 =====================
+// Replace openModal() — populate the new thumb fields too
 async function openModal(release) {
     currentSessionData.album = release;
-    
+
+    // Step 1 fields
     document.getElementById('modalAlbumTitle').innerText = release.title;
+    document.getElementById('modalAlbumTitleThumb').innerText = release.title;
     document.getElementById('modalAlbumCover').src = release.cover_image;
-    document.getElementById('preEmotion').selectedIndex = 0;
-    document.getElementById('modalGenres').innerText = 'Loading...';
+    document.getElementById('modalAlbumCoverThumb').src = release.cover_image;
+    document.getElementById('modalAlbumArtist').innerText = release.artists.map(a => a.name).join(', ');
+    document.getElementById('modalGenres').innerHTML = '<p class="pre-artist">Loading...</p>';
     document.getElementById('modalYear').innerText = '';
     document.getElementById('modalTracklist').innerHTML = '';
-    
+
+    // Always show Step 1, hide Step 2
+    document.getElementById('preStep1').style.display = 'block';
+    document.getElementById('preStep2').style.display = 'none';
+    document.querySelectorAll('input[name="preEmotionRadio"]').forEach(r => {
+        r.checked = r.value === 'neutral';
+    });
+
     resetTimers();
-    
-    const modal = document.getElementById('preSessionModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+    document.getElementById('preSessionModal').style.display = 'flex';
 
     try {
         const res = await fetch(`http://localhost:8000/api/release/${release.id}/`);
         const details = await res.json();
 
-        document.getElementById('modalGenres').innerText =
-            [...(details.genres || []), ...(details.styles || [])].join(', ') || 'N/A';
+        // Year badge
+        document.getElementById('modalYear').innerText = details.year || '';
+        // Update the thumb subtitle once year is loaded
+        document.getElementById('modalAlbumSubThumb').innerText =
+            [release.artists.map(a => a.name).join(', '), details.year].filter(Boolean).join(' · ');
 
-        document.getElementById('modalYear').innerText = details.year || 'N/A';
+        // Genre pills
+        const allGenres = [...(details.genres || []), ...(details.styles || [])];
+        const genresEl = document.getElementById('modalGenres');
+        genresEl.innerHTML = allGenres.length
+            ? allGenres.map(g => `<span class="genre-pill">${g}</span>`).join('')
+            : '<p class="pre-artist">N/A</p>';
 
+        // Tracklist rows
         const tracklistEl = document.getElementById('modalTracklist');
         tracklistEl.innerHTML = (details.tracklist || []).map(track => `
             <div class="track-row">
@@ -291,14 +417,28 @@ async function openModal(release) {
         `).join('');
 
     } catch (e) {
-        document.getElementById('modalGenres').innerText = 'Could not load details.';
+        document.getElementById('modalGenres').innerHTML = '<p class="pre-artist">Could not load details.</p>';
     }
 }
 
-// ---------------- MODAL 2 ----------------
+// New: go to mood step
+function goToMoodStep() {
+    document.getElementById('preStep1').style.display = 'none';
+    document.getElementById('preStep2').style.display = 'block';
+}
+
+// New: go back to details step
+function backToDetails() {
+    document.getElementById('preStep2').style.display = 'none';
+    document.getElementById('preStep1').style.display = 'block';
+}
+
+// ===================== MODAL 2 =====================
+// Replace startActiveSession() — read from radio buttons instead of <select>
 function startActiveSession() {
-    currentSessionData.preEmotion = document.getElementById('preEmotion').value;
-    
+    const selected = document.querySelector('input[name="preEmotionRadio"]:checked');
+    currentSessionData.preEmotion = selected ? selected.value : 'neutral';
+
     document.getElementById('preSessionModal').style.display = 'none';
     document.getElementById('activeAlbumTitle').innerText = currentSessionData.album.title;
     document.getElementById('activeSessionModal').style.display = 'flex';
@@ -336,7 +476,7 @@ function toggleTimer(side) {
     }, 1000);
 }
 
-// ---------------- MODAL 3 ----------------
+// ===================== MODAL 3 =====================
 function endActiveSession() {
     clearInterval(activeInterval);
     runningSide = null;
@@ -350,7 +490,7 @@ function endActiveSession() {
     document.getElementById('postSessionModal').style.display = 'flex';
 }
 
-// ---------------- SAVE ----------------
+// ===================== SAVE SESSION =====================
 async function submitFinalSession() {
     currentSessionData.postEmotion = document.getElementById('postEmotion').value;
     
@@ -364,6 +504,8 @@ async function submitFinalSession() {
         side_a_duration: currentSessionData.timeA,
         side_b_duration: currentSessionData.timeB,
         month: new Date().getMonth() + 1,
+        weather: weather,
+        user_id: currentUser ? currentUser.id : null,
     };
 
     try {
@@ -378,7 +520,7 @@ async function submitFinalSession() {
             const tagRes = await fetch(`http://localhost:8000/api/mood-tags/?discogs_id=${id}`);
             const tagData = await tagRes.json();
             if (tagData.mood_tags && tagData.mood_tags.length > 0) {
-                renderMoodTags(id, tagData.mood_tags);  // ← was inline, now shared helper
+                renderMoodTags(id, tagData.mood_tags);
             }
             closeAllModals();
         }
@@ -387,7 +529,7 @@ async function submitFinalSession() {
     }
 }
 
-// ---------------- HELPERS ----------------
+// ===================== HELPERS =====================
 function formatTime(totalSeconds) {
     const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
     const s = (totalSeconds % 60).toString().padStart(2, '0');
@@ -412,3 +554,7 @@ function closeAllModals() {
     document.getElementById('postSessionModal').style.display = 'none';
     resetTimers();
 }
+
+document.getElementById('preSessionModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAllModals();
+});

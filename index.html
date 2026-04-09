@@ -7,17 +7,63 @@
         <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="header-left">
+    <div id="loginModal" class="login-overlay">
+        <div class="login-card">
+            <div class="login-logo">
+                <span class="login-logo-icon">◉</span>
                 <h1>CrateDigger</h1>
             </div>
-            <div class="header-controls">
-                <input type="text" id="usernameInput" placeholder="Discogs Username">
-                <button onclick="fetchCollection()">Load Collection</button>
+            <p class="login-tagline">Your collection. Your moods. Your music.</p>
+ 
+            <div class="login-form">
+                <label class="login-label" for="loginUsernameInput">Discogs Username</label>
+                <input
+                    type="text"
+                    id="loginUsernameInput"
+                    class="login-input"
+                    placeholder="e.g. vinyl_nerd_42"
+                    autocomplete="off"
+                    spellcheck="false"
+                />
+                <div id="loginError" class="login-error" style="display:none;"></div>
+                <button id="loginBtn" class="login-btn" onclick="handleLogin()">
+                    <span id="loginBtnText">Dig In</span>
+                    <span id="loginBtnSpinner" class="login-spinner" style="display:none;">⏳</span>
+                </button>
+            </div>
+ 
+            <span class="login-footer">Don't have Discogs? <a href="https://www.discogs.com/" target="_blank">Sign up for free!</a></span>
+        </div>
+    </div>
+
+    <div id="logoutConfirmModal" class="modal" style="display:none;">
+        <div class="modal-content logout-confirm-content">
+            <div class="logout-icon-circle">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 3h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-4M9 14l4-4-4-4M13 10H3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h3 class="logout-confirm-title">Log out of CrateDigger?</h3>
+            <p class="logout-confirm-body">Your session and listening history are saved. You can log back in with your Discogs username.</p>
+            <div class="logout-confirm-actions">
+                <button class="logout-cancel-btn" onclick="closeLogoutModal()">Cancel</button>
+                <button class="logout-confirm-btn" onclick="confirmLogout()">Log out</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="appContainer" class="container app-locked">
+        <header class="header">
+            <div class="header-left">
+                <span class="header-logo-icon">◉</span>
+                <h1>CrateDigger</h1>
+            </div>
+            <div class="header-user" id="headerUser" style="display:none;">
+                <span class="header-username-label">👤 <span id="headerUsernameDisplay"></span></span>
+                <button class="header-logout-btn" onclick="handleLogout()">Log Out</button>
             </div>
         </header>
-
+ 
         <main class="results">
             <section class="main">
                 <section class="search-container">
@@ -42,40 +88,38 @@
                 <div id="loadingSentinel" style="height: 20px; width: 100%;"></div>
             </section>
         </main>
-
+ 
         <aside class="sidebar">
             <h2>How are you doing today?</h2>
             <!-- MOOD FILTER -->
             <section class="sidebar-section">
                 <h2 class="sidebar-heading">Filter by Mood</h2>
                 <div class="mood-filter-grid">
-                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😤 Stressed</button>
+                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😰 Stressed</button>
                     <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
                     <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
-                    <button class="mood-filter-btn" data-mood="anxious"   onclick="handleMoodFilterClick(this)">😰 Anxious</button>
                     <button class="mood-filter-btn" data-mood="neutral"   onclick="handleMoodFilterClick(this)">😐 Neutral</button>
                     <button class="mood-filter-btn" data-mood="calm"      onclick="handleMoodFilterClick(this)">😌 Calm</button>
                     <button class="mood-filter-btn" data-mood="sad"       onclick="handleMoodFilterClick(this)">😔 Sad</button>
                 </div>
             </section>
-
+ 
             <hr class="sidebar-divider">
-
+ 
             <!-- RECOMMENDER -->
             <section class="sidebar-section">
                 <h2 class="sidebar-heading">What should I spin?</h2>
-
+ 
                 <label class="sidebar-label">How are you feeling?</label>
                 <select id="recommendMoodSelect" class="sidebar-select">
-                    <option value="stressed">😤 Stressed</option>
+                    <option value="stressed">😰 Stressed</option>
                     <option value="happy">😊 Happy</option>
                     <option value="tired">😴 Tired</option>
-                    <option value="anxious">😰 Anxious</option>
                     <option value="neutral" selected>😐 Neutral</option>
                     <option value="calm">😌 Calm</option>
                     <option value="sad">😔 Sad</option>
                 </select>
-
+ 
                 <label class="sidebar-label">What's the weather like?</label>
                 <select id="recommendWeatherSelect" class="sidebar-select">
                     <option value="">— no preference —</option>
@@ -87,38 +131,92 @@
                     <option value="warm">🌤️ Warm</option>
                     <option value="cold">🧊 Cold</option>
                 </select>
-
+ 
                 <button class="sidebar-recommend-btn" onclick="getRecommendation()">
                     Recommend a Record
                 </button>
-
+ 
                 <div id="recommendationResult" class="recommendation-result"></div>
             </section>
         </aside>
-        <script src="script.js"></script>
     </div>
 
     <div id="preSessionModal" class="modal" style="display:none;">
-        <div class="modal-content">
+        <div class="modal-content pre-session-content">
             <span class="close" onclick="closeAllModals()">&times;</span>
-            <h2>Start Session</h2>
-            <img id="modalAlbumCover" src="" alt="Album Cover">
-            <p id="modalAlbumTitle"></p>
-            <p><strong>Year:</strong> <span id="modalYear"></span></p>
-            <p><strong>Genres:</strong> <span id="modalGenres"></span></p>
-            <div id="modalTracklist"></div>
 
-            <label>How are you feeling right now?</label>
-            <select id="preEmotion">
-                <option value="stressed">😤 Stressed</option>
-                <option value="happy">😊 Happy</option>
-                <option value="tired">😴 Tired</option>
-                <option value="anxious">😰 Anxious</option>
-                <option value="neutral">😐 Neutral</option>
-                <option value="calm">😌 Calm</option>
-                <option value="sad">😔 Sad</option>
-            </select>
-            <button onclick="startActiveSession()">Begin Listening</button>
+            <!-- STEP 1: Album details -->
+            <div id="preStep1">
+                <div class="pre-session-grid">
+
+                    <!-- LEFT: Cover + meta -->
+                    <div class="pre-col pre-col-left">
+                        <img id="modalAlbumCover" src="" alt="Album Cover" class="pre-cover">
+                        <p id="modalAlbumTitle" class="pre-title"></p>
+                        <p id="modalAlbumArtist" class="pre-artist"></p>
+                        <span id="modalYear" class="pre-year-badge"></span>
+                    </div>
+
+                    <!-- MIDDLE: Tracklist -->
+                    <div class="pre-col pre-col-right">
+                        <p class="pre-col-heading">Tracklist</p>
+                        <div id="modalTracklist" class="pre-tracklist"></div>
+                    </div>
+
+                    <!-- RIGHT: Genres -->
+                    <div class="pre-col pre-col-mid">
+                        <p class="pre-col-heading">Genres</p>
+                        <div id="modalGenres" class="pre-genres"></div>
+                    </div>
+                </div>
+
+                <div class="pre-session-footer">
+                    <button class="pre-listen-btn" onclick="goToMoodStep()">
+                        I want to listen to this album
+                    </button>
+                    <button class="pre-close-link" onclick="closeAllModals()">Close</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Mood picker (slides in) -->
+            <div id="preStep2" style="display:none;">
+                <div class="pre-mood-step">
+                    <div class="pre-mood-album-row">
+                        <img id="modalAlbumCoverThumb" src="" alt="" class="pre-thumb">
+                        <div>
+                            <p class="pre-mood-album-title" id="modalAlbumTitleThumb"></p>
+                            <p class="pre-mood-album-sub" id="modalAlbumSubThumb"></p>
+                        </div>
+                    </div>
+
+                    <p class="pre-mood-question">How are you feeling right now?</p>
+                    <div class="pre-mood-grid">
+                        <label class="pre-mood-option">
+                            <input type="radio" name="preEmotionRadio" value="stressed"> 😰 Stressed
+                        </label>
+                        <label class="pre-mood-option">
+                            <input type="radio" name="preEmotionRadio" value="happy"> 😊 Happy
+                        </label>
+                        <label class="pre-mood-option">
+                            <input type="radio" name="preEmotionRadio" value="tired"> 😴 Tired
+                        </label>
+                        <label class="pre-mood-option">
+                            <input type="radio" name="preEmotionRadio" value="neutral" checked> 😐 Neutral
+                        </label>
+                        <label class="pre-mood-option">
+                            <input type="radio" name="preEmotionRadio" value="calm"> 😌 Calm
+                        </label>
+                        <label class="pre-mood-option" style="grid-column: span 2; max-width: 50%;">
+                            <input type="radio" name="preEmotionRadio" value="sad"> 😔 Sad
+                        </label>
+                    </div>
+
+                    <div class="pre-mood-footer">
+                        <button class="pre-back-btn" onclick="backToDetails()">← Back</button>
+                        <button class="pre-start-btn" onclick="startActiveSession()">Start listening</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -155,10 +253,9 @@
             
             <label>How are you feeling now?</label>
             <select id="postEmotion">
-                <option value="stressed">😤 Stressed</option>
+                <option value="stressed">😰 Stressed</option>
                 <option value="happy">😊 Happy</option>
                 <option value="tired">😴 Tired</option>
-                <option value="anxious">😰 Anxious</option>
                 <option value="neutral">😐 Neutral</option>
                 <option value="calm">😌 Calm</option>
                 <option value="sad">😔 Sad</option>
@@ -166,5 +263,6 @@
             <button onclick="submitFinalSession()">Save to Database</button>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
