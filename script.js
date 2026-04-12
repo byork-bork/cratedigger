@@ -3,7 +3,6 @@ let currentUser = null; // { id, username, discogs_username }
 let allReleases = [];
 let sortDirection = 'asc';
 let lastSortValue = 'added';
-let recommendedFilterIds = null; // null = no filter active
 
 // ===================== LOGIN =====================
 async function handleLogin() {
@@ -201,12 +200,6 @@ function applyFilters() {
                 .some(badge => badge.textContent === filterMood);
         });
     }
-    // Recommendation filter
-    if (recommendedFilterIds !== null) {
-        filtered = filtered.filter(item =>
-            recommendedFilterIds.includes(item.basic_information.id)
-        );
-    }
 
     filtered.sort((a, b) => {
         const infoA = a.basic_information;
@@ -259,17 +252,41 @@ function handleMoodFilterClick(btn) {
     applyFilters();
 }
 
-// ===================== RECOMMENDATION =====================
-async function getRecommendation() {
-    const mood     = document.getElementById('recommendMoodSelect').value;
-    const weather = document.getElementById('recommendWeatherSelect').value || null;
-    const resultArea = document.getElementById('recommendationResult');
+// ===================== RECOMMENDATION MODAL =====================
 
-    resultArea.innerHTML = '<p>Finding the perfect record...</p>';
+// Holds the last recommendation result so startSessionFromRecommendation can use it
+let lastRecommendation = null;   // { discogs_id, title, artist, cover_url, explanation, year? }
+let lastRecommendMood    = null;
+let lastRecommendWeather = null;
+
+function openRecommendModal() {
+    // Reset to step 1 each time
+    document.getElementById('recStep1').style.display = 'block';
+    document.getElementById('recStep2').style.display = 'none';
+    document.getElementById('recStep3').style.display = 'none';
+    document.getElementById('recommendMoodSelect').value    = 'neutral';
+    document.getElementById('recommendWeatherSelect').value = '';
+    document.getElementById('recommendModal').style.display = 'flex';
+}
+
+function closeRecommendModal() {
+    document.getElementById('recommendModal').style.display = 'none';
+}
+
+async function getRecommendation() {
+    const mood    = document.getElementById('recommendMoodSelect').value;
+    const weather = document.getElementById('recommendWeatherSelect').value || null;
+
+    // Save for session logging later
+    lastRecommendMood    = mood;
+    lastRecommendWeather = weather;
+
+    // Slide to loading state
+    document.getElementById('recStep1').style.display = 'none';
+    document.getElementById('recStep2').style.display = 'block';
+    document.getElementById('recStep3').style.display = 'none';
 
     try {
-        // Send the current collection so the recommender can score
-        // albums directly without needing them pre-saved in the DB
         const collectionSnapshot = allReleases.map(item => ({
             discogs_id: item.basic_information.id,
             title:      item.basic_information.title,
@@ -279,51 +296,81 @@ async function getRecommendation() {
             styles:     item.basic_information.styles  || [],
         }));
 
-        const body = {
-            mood,
-            weather:    weather || null,
-            user_id:    currentUser?.id || null,
-            collection: collectionSnapshot,
-        };
-
         const res  = await fetch('http://localhost:8000/api/recommend/', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(body),
+            body:    JSON.stringify({
+                mood,
+                weather:    weather || null,
+                user_id:    currentUser?.id || null,
+                collection: collectionSnapshot,
+            }),
         });
         const data = await res.json();
 
         if (data.recommendation) {
             const r = data.recommendation;
-            recommendedFilterIds = [r.discogs_id];
-            applyFilters();
+            lastRecommendation = r;
 
-            resultArea.innerHTML = `
-                <div class="recommendation-card">
-                    <img src="${r.cover_url}" alt="${r.title}"
-                         onerror="this.src='https://placehold.co/150'">
-                    <div class="recommendation-info">
-                        <p class="rec-title">${r.title}</p>
-                        <p class="rec-artist">${r.artist}</p>
-                    </div>
-                </div>
-                ${r.explanation ? `<p class="rec-explanation">${r.explanation}</p>` : ''}
-                <button class="rec-clear-btn" onclick="clearRecommendationFilter()">
-                    ✕ Clear filter
-                </button>
-            `;
+            // Try to pull the year from the release details cache
+            let year = '';
+            try {
+                const detailRes = await fetch(`http://localhost:8000/api/release/${r.discogs_id}/`);
+                const details   = await detailRes.json();
+                year = details.year || '';
+                // Attach year to the stored recommendation for session use
+                lastRecommendation.year = year;
+            } catch (_) {}
+
+            // Populate result step
+            document.getElementById('recResultCover').src       = r.cover_url;
+            document.getElementById('recResultTitle').innerText = r.title;
+            document.getElementById('recResultArtist').innerText = r.artist;
+            document.getElementById('recResultYear').innerText  = year;
+            document.getElementById('recResultExplanation').innerText =
+                r.explanation || 'No explanation available.';
+
+            // Slide to result
+            document.getElementById('recStep2').style.display = 'none';
+            document.getElementById('recStep3').style.display = 'block';
+
         } else {
-            resultArea.innerHTML = `<p class="rec-empty">${data.message || 'No recommendation available.'}</p>`;
+            // Back to step 1 with a subtle error note
+            document.getElementById('recStep2').style.display = 'none';
+            document.getElementById('recStep1').style.display = 'block';
+            alert(data.message || 'No recommendation found. Try a different mood or weather.');
         }
     } catch (e) {
-        resultArea.innerHTML = '<p>Could not fetch recommendation.</p>';
+        document.getElementById('recStep2').style.display = 'none';
+        document.getElementById('recStep1').style.display = 'block';
+        alert('Could not reach the server. Is Django running?');
     }
 }
 
-function clearRecommendationFilter() {
-    recommendedFilterIds = null;
-    applyFilters();
-    document.getElementById('recommendationResult').innerHTML = '';
+function startSessionFromRecommendation() {
+    if (!lastRecommendation) return;
+
+    // Find the full basic_information object from allReleases so the active
+    // session modal has everything it needs (artists array, cover_image, etc.)
+    const match = allReleases.find(
+        item => item.basic_information.id === lastRecommendation.discogs_id
+    );
+
+    if (!match) {
+        alert('Album not found in your collection.');
+        return;
+    }
+
+    // Pre-populate session data using the recommendation's mood + weather,
+    // bypassing the preSession modal entirely
+    currentSessionData.album      = match.basic_information;
+    currentSessionData.preEmotion = lastRecommendMood    || 'neutral';
+    currentSessionData.weather    = lastRecommendWeather || '';
+
+    resetTimers();
+    document.getElementById('recommendModal').style.display = 'none';
+    document.getElementById('activeAlbumTitle').innerText   = lastRecommendation.title;
+    document.getElementById('activeSessionModal').style.display = 'flex';
 }
 
 // ===================== LAZY IMAGE LOAD =====================
@@ -557,9 +604,10 @@ function resetTimers() {
 }
 
 function closeAllModals() {
-    document.getElementById('preSessionModal').style.display = 'none';
+    document.getElementById('recommendModal').style.display    = 'none';
+    document.getElementById('preSessionModal').style.display   = 'none';
     document.getElementById('activeSessionModal').style.display = 'none';
-    document.getElementById('postSessionModal').style.display = 'none';
+    document.getElementById('postSessionModal').style.display  = 'none';
     resetTimers();
 }
 

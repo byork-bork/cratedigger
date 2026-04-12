@@ -108,37 +108,83 @@
  
             <!-- RECOMMENDER -->
             <section class="sidebar-section">
-                <h2 class="sidebar-heading">What should I spin?</h2>
- 
-                <label class="sidebar-label">How are you feeling?</label>
-                <select id="recommendMoodSelect" class="sidebar-select">
-                    <option value="stressed">😰 Stressed</option>
-                    <option value="happy">😊 Happy</option>
-                    <option value="tired">😴 Tired</option>
-                    <option value="neutral" selected>😐 Neutral</option>
-                    <option value="calm">😌 Calm</option>
-                    <option value="sad">😔 Sad</option>
-                </select>
- 
-                <label class="sidebar-label">What's the weather like?</label>
-                <select id="recommendWeatherSelect" class="sidebar-select">
-                    <option value="">— no preference —</option>
-                    <option value="sunny">☀️ Sunny</option>
-                    <option value="cloudy">☁️ Cloudy</option>
-                    <option value="rainy">🌧️ Rainy</option>
-                    <option value="stormy">⛈️ Stormy</option>
-                    <option value="snowy">❄️ Snowy</option>
-                    <option value="warm">🌤️ Warm</option>
-                    <option value="cold">🧊 Cold</option>
-                </select>
- 
-                <button class="sidebar-recommend-btn" onclick="getRecommendation()">
-                    Recommend a Record
+                <h2 class="sidebar-heading">Don't know what to listen to?</h2>
+                <button class="sidebar-recommend-btn" onclick="openRecommendModal()">
+                    Get a recommendation!
                 </button>
- 
-                <div id="recommendationResult" class="recommendation-result"></div>
             </section>
         </aside>
+    </div>
+
+    <div id="recommendModal" class="modal" style="display:none;">
+        <div class="modal-content rec-modal-content">
+            <span class="close" onclick="closeRecommendModal()">&times;</span>
+
+            <!-- STEP 1: Mood + weather selects -->
+            <div id="recStep1">
+                <div class="rec-modal-header">
+                    <h2 class="rec-modal-title">What should I spin?</h2>
+                    <p class="rec-modal-sub">Tell me how you're feeling and I'll find the perfect record.</p>
+                </div>
+                <div class="rec-step1-body">
+                    <div class="rec-field">
+                        <label class="sidebar-label">How are you feeling?</label>
+                        <select id="recommendMoodSelect" class="sidebar-select">
+                            <option value="stressed">😰 Stressed</option>
+                            <option value="happy">😊 Happy</option>
+                            <option value="tired">😴 Tired</option>
+                            <option value="neutral" selected>😐 Neutral</option>
+                            <option value="calm">😌 Calm</option>
+                            <option value="sad">😔 Sad</option>
+                        </select>
+                    </div>
+                    <div class="rec-field">
+                        <label class="sidebar-label">What's the weather like?</label>
+                        <select id="recommendWeatherSelect" class="sidebar-select">
+                            <option value="">— no preference —</option>
+                            <option value="sunny">☀️ Sunny</option>
+                            <option value="cloudy">☁️ Cloudy</option>
+                            <option value="rainy">🌧️ Rainy</option>
+                            <option value="stormy">⛈️ Stormy</option>
+                            <option value="snowy">❄️ Snowy</option>
+                            <option value="warm">🌤️ Warm</option>
+                            <option value="cold">🧊 Cold</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="rec-modal-footer">
+                    <button class="pre-listen-btn" onclick="getRecommendation()">Recommend a Record</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Loading -->
+            <div id="recStep2" style="display:none;">
+                <div class="rec-loading-state">
+                    <div class="rec-loading-disc">◉</div>
+                    <p class="rec-loading-text">Digging through the crates…</p>
+                </div>
+            </div>
+
+            <!-- STEP 3: Result -->
+            <div id="recStep3" style="display:none;">
+                <div class="rec-result-grid">
+                    <div class="rec-result-left">
+                        <img id="recResultCover" src="" alt="" class="rec-result-cover">
+                        <p id="recResultTitle" class="pre-title"></p>
+                        <p id="recResultArtist" class="pre-artist"></p>
+                        <span id="recResultYear" class="pre-year-badge"></span>
+                    </div>
+                    <div class="rec-result-right">
+                        <p class="pre-col-heading">Why this record?</p>
+                        <p id="recResultExplanation" class="rec-result-explanation"></p>
+                    </div>
+                </div>
+                <div class="rec-result-footer">
+                    <button class="pre-listen-btn" onclick="startSessionFromRecommendation()">▶ Start Listening</button>
+                    <button class="pre-close-link rec-close-btn" onclick="closeRecommendModal()">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="preSessionModal" class="modal" style="display:none;">

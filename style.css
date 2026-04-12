@@ -1016,3 +1016,145 @@ button {
     margin: 6px 0 0;
     padding: 0 2px;
 }
+/* ===================== RECOMMENDATION MODAL ===================== */
+.rec-modal-content {
+    width: 640px;
+    max-width: 95vw;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+    min-height: 260px;
+}
+
+.rec-modal-content > .close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 10;
+    color: #999;
+    font-size: 1.3rem;
+}
+
+/* Step 1 */
+.rec-modal-header {
+    padding: 28px 28px 0;
+}
+
+.rec-modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: #222;
+    margin: 0 0 4px;
+}
+
+.rec-modal-sub {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 20px;
+}
+
+.rec-step1-body {
+    padding: 0 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rec-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rec-modal-footer {
+    padding: 20px 28px 24px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Step 2: loading */
+.rec-loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 28px;
+    gap: 18px;
+}
+
+.rec-loading-disc {
+    font-size: 48px;
+    color: #333;
+    animation: spin 3s linear infinite;
+    display: inline-block;
+    line-height: 1;
+}
+
+.rec-loading-text {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+}
+
+/* Step 3: result */
+.rec-result-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    min-height: 220px;
+    border-bottom: 1px solid #e8e4db;
+}
+
+.rec-result-left {
+    padding: 24px 20px;
+    border-right: 1px solid #e8e4db;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #faf8f3;
+}
+
+.rec-result-cover {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.rec-result-right {
+    padding: 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.rec-result-explanation {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.65;
+    font-style: italic;
+    margin: 0;
+}
+
+.rec-result-footer {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+    background: #faf8f3;
+}
+
+.rec-close-btn {
+    padding: 10px 22px;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    color: #666 !important;
+    font-size: 14px !important;
+    transition: background 0.15s, color 0.15s !important;
+}
+
+.rec-close-btn:hover {
+    background: #f0f0f0 !important;
+    color: #333 !important;
+}
