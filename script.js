@@ -410,6 +410,29 @@ let currentSessionData = {
     postEmotion: ""
 };
 
+// ---- Turntable constants ----
+const TT = {
+    RECORD_CX: 140, RECORD_CY: 130, RECORD_R: 108,
+    PIVOT_X: 265,   PIVOT_Y: 32,
+    NEEDLE_LEN: 118,
+    REST_ANGLE:  90 * Math.PI / 180,
+    PLAY_ANGLE:  115 * Math.PI / 180,
+    LIFT_ANGLE:  90 * Math.PI / 180,
+};
+
+// ---- Turntable runtime state ----
+let tt = {
+    currentAngle: TT.REST_ANGLE,
+    isPlaying: false,
+    isPaused: false,
+    currentSide: 'A',
+    recordRotation: 0,
+    recordAnimFrame: null,
+    timerInterval: null,
+    isDragging: false,
+};
+
+// Legacy aliases kept so existing callers (closeAllModals, submitFinalSession) still compile
 let activeInterval = null;
 let runningSide = null;
 
@@ -485,63 +508,334 @@ function backToDetails() {
     document.getElementById('preStep1').style.display = 'block';
 }
 
-// ===================== MODAL 2 =====================
-// Replace startActiveSession() — read from radio buttons instead of <select>
+// ===================== MODAL 2 — Active Session (Turntable) =====================
+
 function startActiveSession() {
     const selected = document.querySelector('input[name="preEmotionRadio"]:checked');
     currentSessionData.preEmotion = selected ? selected.value : 'neutral';
-
     const selectedWeather = document.querySelector('input[name="weatherRadio"]:checked');
     currentSessionData.weather = selectedWeather ? selectedWeather.value : '';
 
     document.getElementById('preSessionModal').style.display = 'none';
-    document.getElementById('activeAlbumTitle').innerText = currentSessionData.album.title;
+
+    // Populate meta fields
+    const album = currentSessionData.album;
+    document.getElementById('activeAlbumTitle').innerText  = album.title;
+    document.getElementById('activeAlbumArtist').innerText = album.artists ? album.artists.map(a => a.name).join(', ') : '';
+    document.getElementById('activeAlbumYear').innerText   = album.year || '';
+
     document.getElementById('activeSessionModal').style.display = 'flex';
+    ttInit();
 }
 
-function toggleTimer(side) {
-    const btn = document.getElementById(`btn${side}`);
-    const record = document.getElementById('recordGraphic');
+// ---- Turntable helpers ----
 
-    if (runningSide === side) {
-        clearInterval(activeInterval);
-        runningSide = null;
-        btn.innerText = "Resume";
-        record.classList.remove('spinning');
-        return;
+function ttGetNeedleTip(angle) {
+    return {
+        x: TT.PIVOT_X + Math.cos(angle) * TT.NEEDLE_LEN,
+        y: TT.PIVOT_Y + Math.sin(angle) * TT.NEEDLE_LEN,
+    };
+}
+
+function ttIsNearRecord(angle) {
+    const tip = ttGetNeedleTip(angle);
+    const dx = tip.x - TT.RECORD_CX, dy = tip.y - TT.RECORD_CY;
+    return Math.sqrt(dx * dx + dy * dy) <= TT.RECORD_R + 6;
+}
+
+function ttSetAngle(angle) {
+    tt.currentAngle = angle;
+    const tip = ttGetNeedleTip(angle);
+    const armLine   = document.getElementById('ttArmLine');
+    const headshell = document.getElementById('ttHeadshell');
+    const needle    = document.getElementById('ttNeedle');
+
+    armLine.setAttribute('x1', TT.PIVOT_X);
+    armLine.setAttribute('y1', TT.PIVOT_Y);
+    armLine.setAttribute('x2', tip.x);
+    armLine.setAttribute('y2', tip.y);
+
+    const deg = angle * 180 / Math.PI;
+    headshell.setAttribute('transform', `rotate(${deg + 53} ${tip.x} ${tip.y})`);
+    headshell.setAttribute('x', tip.x - 10);
+    headshell.setAttribute('y', tip.y - 5);
+    needle.setAttribute('transform', `rotate(${deg + 53} ${tip.x} ${tip.y})`);
+    needle.setAttribute('x1', tip.x);
+    needle.setAttribute('y1', tip.y);
+    needle.setAttribute('x2', tip.x + Math.cos(angle + Math.PI / 2) * 8);
+    needle.setAttribute('y2', tip.y + Math.sin(angle + Math.PI / 2) * 8);
+}
+
+function ttAnimateArm(fromAngle, toAngle, duration, onDone) {
+    const start = performance.now();
+    function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        ttSetAngle(fromAngle + (toAngle - fromAngle) * ease);
+        if (t < 1) requestAnimationFrame(step);
+        else if (onDone) onDone();
     }
+    requestAnimationFrame(step);
+}
 
-    if (runningSide && runningSide !== side) {
-        clearInterval(activeInterval);
-        document.getElementById(`btn${runningSide}`).innerText = "Start";
-    }
+function ttSpinRecord() {
+    if (!tt.isPlaying || tt.isPaused) return;
+    tt.recordRotation += 1.2;
+    const rec    = document.getElementById('ttRecord');
+    const grooves = document.getElementById('ttGrooves');
+    rec.setAttribute('transform',    `rotate(${tt.recordRotation} 140 130)`);
+    grooves.setAttribute('transform', `rotate(${tt.recordRotation} 140 130)`);
+    tt.recordAnimFrame = requestAnimationFrame(ttSpinRecord);
+}
 
-    runningSide = side;
-    btn.innerText = "Pause";
-    record.classList.add('spinning');
+function ttStartSpin() { if (!tt.recordAnimFrame) ttSpinRecord(); }
+function ttStopSpin()  {
+    if (tt.recordAnimFrame) { cancelAnimationFrame(tt.recordAnimFrame); tt.recordAnimFrame = null; }
+}
 
-    activeInterval = setInterval(() => {
-        if (side === 'A') {
-            currentSessionData.timeA++;
-            document.getElementById('timeA').innerText = formatTime(currentSessionData.timeA);
-        } else {
-            currentSessionData.timeB++;
-            document.getElementById('timeB').innerText = formatTime(currentSessionData.timeB);
-        }
+function ttStartTimer() {
+    if (tt.timerInterval) return;
+    tt.timerInterval = setInterval(() => {
+        if (tt.currentSide === 'A') { currentSessionData.timeA++; }
+        else                        { currentSessionData.timeB++; }
+        ttUpdateTimerDisplay();
     }, 1000);
 }
 
+function ttStopTimer() {
+    clearInterval(tt.timerInterval);
+    tt.timerInterval = null;
+}
+
+function ttUpdateTimerDisplay() {
+    const elA = document.getElementById('timeA');
+    const elB = document.getElementById('timeB');
+    elA.innerText  = formatTime(currentSessionData.timeA);
+    elB.innerText  = formatTime(currentSessionData.timeB);
+    elA.className  = 'as-timer-val' + (tt.isPlaying && !tt.isPaused && tt.currentSide === 'A' ? ' as-timer-active' : '');
+    elB.className  = 'as-timer-val' + (tt.isPlaying && !tt.isPaused && tt.currentSide === 'B' ? ' as-timer-active' : '');
+}
+
+function ttSetPlayUI(playing) {
+    const icon  = document.getElementById('ppIcon');
+    const label = document.getElementById('ppLabel');
+    if (playing) {
+        label.textContent = 'Pause';
+        icon.innerHTML = '<rect x="2" y="2" width="4" height="10" rx="1"/><rect x="8" y="2" width="4" height="10" rx="1"/>';
+    } else {
+        label.textContent = tt.isPaused ? 'Resume' : 'Start';
+        icon.innerHTML = '<path d="M3 2l9 5-9 5V2z"/>';
+    }
+}
+
+function ttAnimateFlip(onDone) {
+    const group = document.getElementById('ttRecordGroup');
+    const cx = 140, cy = 130, r = TT.RECORD_R;
+    const start = performance.now(), dur = 600;
+
+    function step(now) {
+        const t = Math.min((now - start) / dur, 1);
+        // ease in-out
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        const angle = ease * 180;
+
+        // Perspective squish: scaleX simulates rotation around Y axis
+        // First half: squeeze to 0 (face disappears), second half: expand back (back face)
+        const scaleX = Math.abs(Math.cos(angle * Math.PI / 180));
+        // Slight vertical bulge at midpoint for the 3D "pop"
+        const scaleY = 1 + 0.08 * Math.sin(ease * Math.PI);
+
+        group.setAttribute('transform',
+            `translate(${cx} ${cy}) scale(${scaleX} ${scaleY}) translate(${-cx} ${-cy})`
+        );
+
+        // Swap appearance at the midpoint
+        if (angle >= 90) {
+            document.getElementById('ttRecord').setAttribute('fill', '#111');
+        }
+
+        if (t < 1) {
+            requestAnimationFrame(step);
+        } else {
+            group.setAttribute('transform', '');
+            document.getElementById('ttRecord').setAttribute('fill', 'url(#recGrad)');
+            if (onDone) onDone();
+        }
+    }
+    requestAnimationFrame(step);
+}
+
+function ttBuildGrooves() {
+    const g = document.getElementById('ttGrooves');
+    if (!g || g.childElementCount > 0) return;
+    for (let r = 42; r <= 102; r += 5) {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', 140); c.setAttribute('cy', 130); c.setAttribute('r', r);
+        c.setAttribute('fill', 'none');
+        c.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+        c.setAttribute('stroke-width', '1');
+        g.appendChild(c);
+    }
+}
+
+// ---- Public handlers called from HTML ----
+
+function handlePlayPause() {
+    if (!tt.isPlaying) {
+        tt.isPlaying = true; tt.isPaused = false;
+        ttAnimateArm(tt.currentAngle, TT.PLAY_ANGLE, 600, () => {
+            ttStartTimer(); ttStartSpin();
+        });
+        ttSetPlayUI(true);
+        ttUpdateTimerDisplay();
+    } else if (!tt.isPaused) {
+        tt.isPaused = true;
+        ttStopTimer(); ttStopSpin();
+        ttAnimateArm(tt.currentAngle, TT.LIFT_ANGLE, 400, null);
+        ttSetPlayUI(false);
+        ttUpdateTimerDisplay();
+    } else {
+        tt.isPaused = false;
+        ttAnimateArm(tt.currentAngle, TT.PLAY_ANGLE, 400, () => {
+            ttStartTimer(); ttStartSpin();
+        });
+        ttSetPlayUI(true);
+        ttUpdateTimerDisplay();
+    }
+}
+
+function handleFlip() {
+    const wasPlaying = tt.isPlaying && !tt.isPaused;
+    ttStopTimer(); ttStopSpin();
+
+    ttAnimateArm(tt.currentAngle, TT.LIFT_ANGLE, 300, () => {
+        tt.currentSide = tt.currentSide === 'A' ? 'B' : 'A';
+        document.getElementById('activeSideLabel').innerText = tt.currentSide;
+
+        // Reset record rotation visually
+        const rec    = document.getElementById('ttRecord');
+        const grooves = document.getElementById('ttGrooves');
+        rec.setAttribute('transform', '');
+        grooves.setAttribute('transform', '');
+        tt.recordRotation = 0;
+
+        ttAnimateFlip(() => {
+            if (wasPlaying) {
+                tt.isPlaying = true; tt.isPaused = false;
+                ttAnimateArm(TT.LIFT_ANGLE, TT.PLAY_ANGLE, 500, () => {
+                    ttStartTimer(); ttStartSpin();
+                });
+                ttSetPlayUI(true);
+            } else {
+                tt.isPlaying = false; tt.isPaused = false;
+                ttAnimateArm(TT.LIFT_ANGLE, TT.REST_ANGLE, 500, null);
+                ttSetPlayUI(false);
+            }
+            ttUpdateTimerDisplay();
+        });
+    });
+}
+
+// ---- Drag-to-play tonearm ----
+
+function ttGetSvgPoint(e) {
+    const svg  = document.getElementById('turntableSvg');
+    const rect = svg.getBoundingClientRect();
+    const client = e.touches ? e.touches[0] : e;
+    return {
+        x: (client.clientX - rect.left) * (320 / rect.width),
+        y: (client.clientY - rect.top)  * (260 / rect.height),
+    };
+}
+
+function ttDragStart(e) {
+    tt.isDragging = true;
+    if (tt.isPlaying && !tt.isPaused) { ttStopTimer(); ttStopSpin(); }
+    document.getElementById('ttTonearm').style.cursor = 'grabbing';
+    e.stopPropagation();
+}
+
+function ttDragMove(e) {
+    if (!tt.isDragging) return;
+    const pt  = ttGetSvgPoint(e);
+    let angle = Math.atan2(pt.y - TT.PIVOT_Y, pt.x - TT.PIVOT_X);
+    angle = Math.max(75 * Math.PI / 180, Math.min(125 * Math.PI / 180, angle));
+    ttSetAngle(angle);
+}
+
+function ttDragEnd() {
+    if (!tt.isDragging) return;
+    tt.isDragging = false;
+    document.getElementById('ttTonearm').style.cursor = 'grab';
+
+    if (ttIsNearRecord(tt.currentAngle)) {
+        tt.isPlaying = true; tt.isPaused = false;
+        ttAnimateArm(tt.currentAngle, TT.PLAY_ANGLE, 300, () => {
+            ttStartTimer(); ttStartSpin();
+        });
+        ttSetPlayUI(true);
+        ttUpdateTimerDisplay();
+    } else {
+        tt.isPlaying = false; tt.isPaused = false;
+        ttStopTimer(); ttStopSpin();
+        ttAnimateArm(tt.currentAngle, TT.REST_ANGLE, 400, null);
+        ttSetPlayUI(false);
+        ttUpdateTimerDisplay();
+    }
+}
+
+// ---- Init: called each time the modal opens ----
+
+function ttInit() {
+    ttBuildGrooves();
+    tt.currentAngle   = TT.REST_ANGLE;
+    tt.isPlaying      = false;
+    tt.isPaused       = false;
+    tt.currentSide    = 'A';
+    tt.recordRotation = 0;
+
+    ttSetAngle(TT.REST_ANGLE);
+    ttSetPlayUI(false);
+    document.getElementById('activeSideLabel').innerText = 'A';
+    ttUpdateTimerDisplay();
+
+    const rec    = document.getElementById('ttRecord');
+    const grooves = document.getElementById('ttGrooves');
+    rec.setAttribute('transform', '');
+    rec.setAttribute('fill', 'url(#recGrad)');
+    grooves.setAttribute('transform', '');
+
+    // Replace rec.onclick = ... with:
+    const group = document.getElementById('ttRecordGroup');
+    group.onclick = () => {
+        handleFlip();
+    };
+
+    // Tonearm drag
+    const arm = document.getElementById('ttTonearm');
+    arm.addEventListener('mousedown',  ttDragStart);
+    arm.addEventListener('touchstart', ttDragStart, { passive: true });
+}
+
+// Attach window-level drag listeners once
+window.addEventListener('mousemove', ttDragMove);
+window.addEventListener('touchmove', ttDragMove, { passive: true });
+window.addEventListener('mouseup',   ttDragEnd);
+window.addEventListener('touchend',  ttDragEnd);
+
 // ===================== MODAL 3 =====================
 function endActiveSession() {
-    clearInterval(activeInterval);
-    runningSide = null;
-    document.getElementById('recordGraphic').classList.remove('spinning');
+    ttStopTimer();
+    ttStopSpin();
+    tt.isPlaying = false;
+    tt.isPaused  = false;
+    ttAnimateArm(tt.currentAngle, TT.REST_ANGLE, 500, null);
 
     document.getElementById('activeSessionModal').style.display = 'none';
-    
+
     const totalSeconds = currentSessionData.timeA + currentSessionData.timeB;
     document.getElementById('totalTimeDisplay').innerText = formatTime(totalSeconds);
-    
+
     document.getElementById('postSessionModal').style.display = 'flex';
 }
 
@@ -592,15 +886,18 @@ function formatTime(totalSeconds) {
 }
 
 function resetTimers() {
-    clearInterval(activeInterval);
-    runningSide = null;
+    ttStopTimer();
+    ttStopSpin();
+    tt.isPlaying      = false;
+    tt.isPaused       = false;
+    tt.currentSide    = 'A';
+    tt.recordRotation = 0;
     currentSessionData.timeA = 0;
     currentSessionData.timeB = 0;
-    document.getElementById('timeA').innerText = "00:00";
-    document.getElementById('timeB').innerText = "00:00";
-    document.getElementById('btnA').innerText = "Start";
-    document.getElementById('btnB').innerText = "Start";
-    document.getElementById('recordGraphic').classList.remove('spinning');
+    // Reset legacy aliases
+    clearInterval(activeInterval);
+    activeInterval = null;
+    runningSide    = null;
 }
 
 function closeAllModals() {

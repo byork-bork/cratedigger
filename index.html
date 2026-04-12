@@ -10,7 +10,7 @@
     <div id="loginModal" class="login-overlay">
         <div class="login-card">
             <div class="login-logo">
-                <span class="login-logo-icon">◉</span>
+                <span class="login-logo-icon">📀</span>
                 <h1>CrateDigger</h1>
             </div>
             <p class="login-tagline">Your collection. Your moods. Your music.</p>
@@ -55,7 +55,7 @@
     <div id="appContainer" class="container app-locked">
         <header class="header">
             <div class="header-left">
-                <span class="header-logo-icon">◉</span>
+                <span class="header-logo-icon">📀</span>
                 <h1>CrateDigger</h1>
             </div>
             <div class="header-user" id="headerUser" style="display:none;">
@@ -63,7 +63,7 @@
                 <button class="header-logout-btn" onclick="handleLogout()">Log Out</button>
             </div>
         </header>
- 
+        
         <main class="results">
             <section class="main">
                 <section class="search-container">
@@ -95,12 +95,12 @@
             <section class="sidebar-section">
                 <h2 class="sidebar-heading">Filter by Mood</h2>
                 <div class="mood-filter-grid">
-                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😰 Stressed</button>
-                    <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
-                    <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
                     <button class="mood-filter-btn" data-mood="neutral"   onclick="handleMoodFilterClick(this)">😐 Neutral</button>
+                    <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
                     <button class="mood-filter-btn" data-mood="calm"      onclick="handleMoodFilterClick(this)">😌 Calm</button>
                     <button class="mood-filter-btn" data-mood="sad"       onclick="handleMoodFilterClick(this)">😔 Sad</button>
+                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😰 Stressed</button>
+                    <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
                 </div>
             </section>
  
@@ -130,12 +130,12 @@
                     <div class="rec-field">
                         <label class="sidebar-label">How are you feeling?</label>
                         <select id="recommendMoodSelect" class="sidebar-select">
-                            <option value="stressed">😰 Stressed</option>
-                            <option value="happy">😊 Happy</option>
-                            <option value="tired">😴 Tired</option>
                             <option value="neutral" selected>😐 Neutral</option>
+                            <option value="happy">😊 Happy</option>
                             <option value="calm">😌 Calm</option>
                             <option value="sad">😔 Sad</option>
+                            <option value="stressed">😰 Stressed</option>
+                            <option value="tired">😴 Tired</option>
                         </select>
                     </div>
                     <div class="rec-field">
@@ -220,7 +220,6 @@
                     <button class="pre-listen-btn" onclick="goToMoodStep()">
                         I want to listen to this album
                     </button>
-                    <button class="pre-close-link" onclick="closeAllModals()">Close</button>
                 </div>
             </div>
 
@@ -240,22 +239,22 @@
                             <p class="pre-mood-question">How are you feeling right now?</p>
                             <div class="pre-mood-grid">
                                 <label class="pre-mood-option">
-                                    <input type="radio" name="preEmotionRadio" value="stressed"> 😰 Stressed
+                                    <input type="radio" name="preEmotionRadio" value="neutral" checked> 😐 Neutral
                                 </label>
                                 <label class="pre-mood-option">
                                     <input type="radio" name="preEmotionRadio" value="happy"> 😊 Happy
-                                </label>
-                                <label class="pre-mood-option">
-                                    <input type="radio" name="preEmotionRadio" value="tired"> 😴 Tired
-                                </label>
-                                <label class="pre-mood-option">
-                                    <input type="radio" name="preEmotionRadio" value="neutral" checked> 😐 Neutral
                                 </label>
                                 <label class="pre-mood-option">
                                     <input type="radio" name="preEmotionRadio" value="calm"> 😌 Calm
                                 </label>
                                 <label class="pre-mood-option">
                                     <input type="radio" name="preEmotionRadio" value="sad"> 😔 Sad
+                                </label>
+                                <label class="pre-mood-option">
+                                    <input type="radio" name="preEmotionRadio" value="stressed"> 😰 Stressed
+                                </label>
+                                <label class="pre-mood-option">
+                                    <input type="radio" name="preEmotionRadio" value="tired"> 😴 Tired
                                 </label>
                             </div>
                         </div>
@@ -301,28 +300,85 @@
     </div>
 
     <div id="activeSessionModal" class="modal" style="display:none;">
-        <div class="modal-content text-center">
-            <h2>Now Spinning</h2>
-            <p id="activeAlbumTitle" style="font-weight:bold;"></p>
-            
-            <div id="recordGraphic" class="record">
-                <div class="record-label"></div>
+        <div class="modal-content active-session-content">
+
+            <!-- Top row: album meta + side indicator -->
+            <div class="as-top-row">
+                <div class="as-album-meta">
+                    <h2 id="activeAlbumTitle" class="as-title"></h2>
+                    <p id="activeAlbumArtist" class="as-artist"></p>
+                    <span id="activeAlbumYear" class="as-year-badge"></span>
+                </div>
+                <div class="as-side-badge">
+                    Side <span id="activeSideLabel">A</span>
+                </div>
             </div>
 
-            <div class="timer-container">
-                <div class="side-timer">
-                    <h3>Side A</h3>
-                    <div id="timeA" class="time-display">00:00</div>
-                    <button id="btnA" onclick="toggleTimer('A')">Start</button>
+            <!-- Turntable SVG -->
+            <div class="as-turntable-area">
+                <svg id="turntableSvg" class="as-turntable-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="recGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#2a2a2a"/>
+                            <stop offset="40%" stop-color="#1a1a1a"/>
+                            <stop offset="100%" stop-color="#0d0d0d"/>
+                        </radialGradient>
+                        <clipPath id="recClip">
+                            <ellipse cx="140" cy="130" rx="108" ry="108"/>
+                        </clipPath>
+                    </defs>
+
+                    <!-- Platter shadow -->
+                    <circle cx="140" cy="130" r="112" fill="#333" opacity="0.12"/>
+                    <!-- Replace the record, grooves, and label section with this: -->
+                    <g id="ttRecordGroup" style="cursor:pointer;">
+                        <ellipse id="ttRecord" cx="140" cy="130" rx="108" ry="108" fill="url(#recGrad)"/>
+                        <g id="ttGrooves" clip-path="url(#recClip)"></g>
+                        <circle cx="140" cy="130" r="32" fill="#c8311a"/>
+                        <circle cx="140" cy="130" r="22" fill="#1a1a1a"/>
+                        <circle cx="140" cy="130" r="4" fill="#555"/>
+                    </g>
+
+                    <!-- Tonearm -->
+                    <g id="ttTonearm" style="cursor:grab;">
+                        <line id="ttArmLine" x1="265" y1="32" x2="192" y2="148" stroke="#999" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="265" cy="32" r="10" fill="#e0ddd6" stroke="#aaa" stroke-width="1"/>
+                        <rect id="ttHeadshell" x="182" y="141" width="20" height="10" rx="3" fill="#666"/>
+                        <line id="ttNeedle" x1="192" y1="148" x2="188" y2="158" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+                    </g>
+
+                    <text x="10" y="252" font-size="10" fill="#aaa">drag tonearm onto record to play</text>
+                </svg>
+            </div>
+
+            <!-- Timers -->
+            <div class="as-timer-row">
+                <div class="as-timer-item">
+                    <div class="as-timer-label">Side A</div>
+                    <div class="as-timer-val" id="timeA">00:00</div>
                 </div>
-                <div class="side-timer">
-                    <h3>Side B</h3>
-                    <div id="timeB" class="time-display">00:00</div>
-                    <button id="btnB" onclick="toggleTimer('B')">Start</button>
+                <div class="as-timer-item">
+                    <div class="as-timer-label">Side B</div>
+                    <div class="as-timer-val" id="timeB">00:00</div>
                 </div>
             </div>
-            
-            <button class="end-btn" onclick="endActiveSession()">End Session</button>
+
+            <!-- Controls -->
+            <div class="as-controls-row">
+                <button class="as-ctrl-btn as-ctrl-primary" id="btnPlayPause" onclick="handlePlayPause()">
+                    <svg id="ppIcon" width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><path d="M3 2l9 5-9 5V2z"/></svg>
+                    <span id="ppLabel">Start</span>
+                </button>
+                <button class="as-ctrl-btn" id="btnFlip" onclick="handleFlip()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7c0-2.76 2.24-5 5-5 1.5 0 2.85.66 3.78 1.7M12 7c0 2.76-2.24 5-5 5-1.5 0-2.85-.66-3.78-1.7"/><path d="M10 1l1.78 2.7L9 4M4 10l-1.78 2.7L5 13"/></svg>
+                    Flip record
+                </button>
+                <button class="as-ctrl-btn as-ctrl-danger" onclick="endActiveSession()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="2" y="2" width="10" height="10" rx="1"/></svg>
+                    End session
+                </button>
+            </div>
+
         </div>
     </div>
 
@@ -333,12 +389,12 @@
             
             <label>How are you feeling now?</label>
             <select id="postEmotion">
-                <option value="stressed">😰 Stressed</option>
-                <option value="happy">😊 Happy</option>
-                <option value="tired">😴 Tired</option>
                 <option value="neutral">😐 Neutral</option>
+                <option value="happy">😊 Happy</option>
                 <option value="calm">😌 Calm</option>
                 <option value="sad">😔 Sad</option>
+                <option value="stressed">😰 Stressed</option>
+                <option value="tired">😴 Tired</option>
             </select>
             <button onclick="submitFinalSession()">Save to Database</button>
         </div>
