@@ -977,6 +977,19 @@ button {
 
 .pre-back-btn:hover { color: #666; }
 
+/* ---- Two-Column Layout for Step 2 ---- */
+.pre-step2-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.pre-step2-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 .pre-start-btn {
     background: #222;
     color: #faf8f3;
@@ -994,4 +1007,12 @@ button {
 
 .close {
     align-self: flex-end; cursor: pointer; font-weight: bold; font-size: 1.2rem;
+}
+.rec-explanation {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 6px 0 0;
+    padding: 0 2px;
 }

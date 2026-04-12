@@ -138,11 +138,11 @@ function displayResults(releases) {
 
         card.innerHTML = `
             <img 
-                src="https://via.placeholder.com/150"
+                src="https://placehold.co/150"
                 data-src="${release.cover_image}"
                 alt="${release.title}"
                 class="lazy-image"
-                onerror="this.src='https://via.placeholder.com/150'"
+                onerror="this.src='https://placehold.co/150'"
             >
             <div id="mood-tag-${release.id}" class="card-mood-tag"></div>
         `;
@@ -301,12 +301,13 @@ async function getRecommendation() {
             resultArea.innerHTML = `
                 <div class="recommendation-card">
                     <img src="${r.cover_url}" alt="${r.title}"
-                         onerror="this.src='https://via.placeholder.com/150'">
+                         onerror="this.src='https://placehold.co/150'">
                     <div class="recommendation-info">
                         <p class="rec-title">${r.title}</p>
                         <p class="rec-artist">${r.artist}</p>
                     </div>
                 </div>
+                ${r.explanation ? `<p class="rec-explanation">${r.explanation}</p>` : ''}
                 <button class="rec-clear-btn" onclick="clearRecommendationFilter()">
                     ✕ Clear filter
                 </button>
@@ -356,6 +357,7 @@ document.getElementById('loginUsernameInput').addEventListener('keypress', funct
 let currentSessionData = {
     album: null,
     preEmotion: "",
+    weather: "",
     timeA: 0,
     timeB: 0,
     postEmotion: ""
@@ -384,6 +386,9 @@ async function openModal(release) {
     document.getElementById('preStep2').style.display = 'none';
     document.querySelectorAll('input[name="preEmotionRadio"]').forEach(r => {
         r.checked = r.value === 'neutral';
+    });
+    document.querySelectorAll('input[name="weatherRadio"]').forEach(r => {
+        r.checked = r.value === '';
     });
 
     resetTimers();
@@ -438,6 +443,9 @@ function backToDetails() {
 function startActiveSession() {
     const selected = document.querySelector('input[name="preEmotionRadio"]:checked');
     currentSessionData.preEmotion = selected ? selected.value : 'neutral';
+
+    const selectedWeather = document.querySelector('input[name="weatherRadio"]:checked');
+    currentSessionData.weather = selectedWeather ? selectedWeather.value : '';
 
     document.getElementById('preSessionModal').style.display = 'none';
     document.getElementById('activeAlbumTitle').innerText = currentSessionData.album.title;
@@ -504,7 +512,7 @@ async function submitFinalSession() {
         side_a_duration: currentSessionData.timeA,
         side_b_duration: currentSessionData.timeB,
         month: new Date().getMonth() + 1,
-        weather: weather,
+        weather: currentSessionData.weather,
         user_id: currentUser ? currentUser.id : null,
     };
 

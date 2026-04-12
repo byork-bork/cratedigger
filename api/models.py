@@ -42,6 +42,23 @@ class Album(models.Model):
         return f"{self.title} by {self.artist}"
 
 
+class CollectionEntry(models.Model):
+    """
+    Join table linking a User to an Album they own.
+    Created/refreshed at login so the server always has a current picture
+    of each user's collection without relying on the frontend to send it.
+    """
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collection')
+    album      = models.ForeignKey('Album', on_delete=models.CASCADE, related_name='owners')
+    date_added = models.DateTimeField(null=True, blank=True)  # from Discogs date_added field
+
+    class Meta:
+        unique_together = ('user', 'album')
+
+    def __str__(self):
+        return f"{self.user.username} owns {self.album.title}"
+
+
 class MoodTag(models.Model):
     album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name='mood_tags')
     emotion = models.CharField(max_length=100, choices=EMOTION_CHOICES)
