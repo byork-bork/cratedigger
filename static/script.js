@@ -421,6 +421,13 @@ document.getElementById('loginUsernameInput').addEventListener('keypress', funct
     if (e.key === 'Enter') handleLogin();
 });
 
+// ===================== SESSION NOTES COUNTER =====================
+document.addEventListener('input', function(e) {
+    if (e.target.id === 'sessionNotes') {
+        document.getElementById('sessionNotesCount').textContent = e.target.value.length;
+    }
+});
+
 // ===================== SESSION STATE =====================
 let currentSessionData = {
     album: null,
@@ -857,6 +864,11 @@ function endActiveSession() {
     const totalSeconds = currentSessionData.timeA + currentSessionData.timeB;
     document.getElementById('totalTimeDisplay').innerText = formatTime(totalSeconds);
 
+    // Reset notes field each time
+    const notesEl = document.getElementById('sessionNotes');
+    if (notesEl) { notesEl.value = ''; }
+    document.getElementById('sessionNotesCount').textContent = '0';
+
     document.getElementById('postSessionModal').style.display = 'flex';
 }
 
@@ -876,6 +888,7 @@ async function submitFinalSession() {
         side_b_duration: currentSessionData.timeB,
         month: new Date().getMonth() + 1,
         weather: currentSessionData.weather,
+        notes: document.getElementById('sessionNotes')?.value.trim() || '',
         user_id: currentUser ? currentUser.id : null,
     };
 
@@ -1081,6 +1094,11 @@ function renderSessionTable() {
             <td class="hv-td"><span class="mood-badge mood-${s.pre_emotion}">${preEmoji} ${s.pre_emotion}</span></td>
             <td class="hv-td"><span class="mood-badge mood-${s.post_emotion}">${postEmoji} ${s.post_emotion}</span></td>
             <td class="hv-td hv-td-dur">${dur}</td>
+            <td class="hv-td hv-td-notes">
+                ${s.notes
+                    ? `<span class="hv-note-text">${s.notes}</span>`
+                    : `<span class="hv-note-empty">—</span>`}
+            </td>
         </tr>`;
     }).join('');
 }

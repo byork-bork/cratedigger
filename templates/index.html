@@ -187,6 +187,7 @@
                                     <th class="hv-th" data-col="pre"      onclick="handleHistorySort(this)">Mood before <span class="hv-sort-arrow"></span></th>
                                     <th class="hv-th" data-col="post"     onclick="handleHistorySort(this)">Mood after <span class="hv-sort-arrow"></span></th>
                                     <th class="hv-th" data-col="duration" onclick="handleHistorySort(this)">Time <span class="hv-sort-arrow"></span></th>
+                                    <th class="hv-th hv-th-notes">Notes</th>
                                 </tr>
                             </thead>
                             <tbody id="hvTableBody"></tbody>
@@ -493,6 +494,15 @@
                         <input type="radio" name="postEmotionRadio" value="tired"> 😴 Tired
                     </label>
                 </div>
+                <label class="sidebar-label" for="sessionNotes">Session notes <span class="post-notes-optional">(optional)</span></label>
+                <textarea
+                    id="sessionNotes"
+                    class="post-session-notes"
+                    placeholder="How was your listening experience?"
+                    maxlength="50"
+                    rows="2"
+                ></textarea>
+                <div class="post-notes-counter"><span id="sessionNotesCount">0</span> / 50</div>
             </div>
             <div class="post-session-footer">
                 <button class="pre-listen-btn" onclick="submitFinalSession()">Save Session</button>

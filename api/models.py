@@ -86,6 +86,7 @@ class ListeningSession(models.Model):
     hour_of_day     = models.IntegerField()
     month           = models.IntegerField(default=1)
     weather         = models.CharField(max_length=50, blank=True, null=True)
+    notes           = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.album.title} - {self.pre_emotion} -> {self.post_emotion}"

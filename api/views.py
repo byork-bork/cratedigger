@@ -232,6 +232,7 @@ def log_session(request):
         hour_of_day     = now.hour,
         month           = now.month,
         weather         = data.get('weather'),
+        notes           = data.get('notes', '').strip() or None,
     )
 
     mood_tag, created = MoodTag.objects.get_or_create(
@@ -354,6 +355,7 @@ def get_history(request):
             'side_b_duration': s.side_b_duration,
             'total_duration': s.side_a_duration + s.side_b_duration,
             'weather':        s.weather,
+            'notes':          s.notes or '',
         })
 
     # --- Stats (scoped to selected period) ---
