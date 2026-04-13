@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.urls import path
 from api.views import (
+    index,
     login_user,
     log_session,
     get_release_details,
@@ -11,6 +12,7 @@ from api.views import (
 )
 
 urlpatterns = [
+    path('',                                index),
     path('admin/',                          admin.site.urls),
     path('api/login/',                      login_user),
     path('api/log-session/',                log_session),

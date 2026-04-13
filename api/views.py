@@ -1,7 +1,9 @@
 # api/views.py
 import os
 import requests
+from django.shortcuts import render
 from django.utils import timezone
+import zoneinfo
 from django.utils.dateparse import parse_datetime
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,6 +13,12 @@ from .models import Album, CollectionEntry, ListeningSession, MoodTag, UserProfi
 from .serializers import ListeningSessionSerializer
 from .recommender import recommend_album
 from dotenv import load_dotenv
+
+def index(request):
+    return render(request, 'index.html')
+
+local_tz = zoneinfo.ZoneInfo('America/Indiana/Indianapolis')
+local_now = timezone.now().astimezone(local_tz)
 
 load_dotenv()
 DISCOGS_TOKEN = os.getenv('DISCOGS_TOKEN')
@@ -286,7 +294,7 @@ def get_recommendation(request):
         mood=mood,
         weather=weather,
         collection=collection,
-        now=timezone.now(),
+        now=local_now,
     )
 
     if not result:

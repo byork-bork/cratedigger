@@ -368,7 +368,7 @@ def genres_for_transformation(pre_mood, target_mood, transformation_profile):
 # ---------------------------------------------------------------------------
 
 def score_candidate(candidate, mood, weather, hour, is_weekend, season,
-                    target_mood=None, transformation_genres=None):
+                    target_mood=None, transformation_genres=None, is_unplayed=False):
     """
     Score a single album dict against the current context.
 
@@ -473,6 +473,12 @@ def score_candidate(candidate, mood, weather, hour, is_weekend, season,
     if mood in SEASON_MOOD_MAP.get(season, []):
         s += 1.5
 
+    # ------------------------------------------------------------------
+    # 7. Album has [not] been played
+    # ------------------------------------------------------------------
+    if is_unplayed:
+        s += 6.0  # enough to compete with played albums, not enough to override mood fit
+
     return s, genre_matched
 
 
@@ -518,9 +524,10 @@ def build_llm_prompt(mood, target_mood, confidence, weather, time_of_day,
     candidates_text = ""
     for i, c in enumerate(top_candidates, 1):
         genres_str = ", ".join((c.get('genres') or []) + (c.get('styles') or [])) or "unknown"
+        unplayed_note = " [NOT YET IN YOUR LISTENING HISTORY]" if c.get('is_unplayed') else ""
         candidates_text += (
             f"{i}. \"{c['title']}\" by {c['artist']} "
-            f"[score: {c['score']:.1f}] — genres: {genres_str}\n"
+            f"[score: {c['score']:.1f}] — genres: {genres_str}{unplayed_note}\n"
         )
 
     shift_note = (
@@ -556,6 +563,10 @@ Your task:
 2. Write a single warm, specific sentence explaining why this album fits right now.
    Reference the mood, the time/weather/season if relevant, and the album's character.
    Do NOT be generic. Do NOT say "this album matches your mood."
+3. If the chosen album is marked [NOT YET IN YOUR LISTENING HISTORY], frame the 
+   explanation around discovery — e.g. "this would be a great one to explore" or 
+   "you haven't spun this one yet, and tonight feels right for it." Don't use those 
+   exact phrases; make it feel natural and specific to the album.
 
 Respond ONLY with valid JSON in exactly this format (no markdown, no extra keys):
 {{
@@ -750,10 +761,12 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
             did = candidate['discogs_id']
             if did in final_scores:
                 continue
+            is_unplayed = did not in session_counts
             genre_score, _ = score_candidate(
                 candidate, mood, weather, hour, is_weekend, season,
                 target_mood=target_mood,
                 transformation_genres=transformation_genres,
+                is_unplayed=is_unplayed,
             )
             if genre_score > 0:
                 final_scores[did] = genre_score
@@ -761,7 +774,7 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
         if final_scores:
             return _finalise(
                 final_scores, coll_by_id, mood, target_mood, confidence,
-                weather, time_of_day, day_type, season, transformation_profile,
+                weather, time_of_day, day_type, season, transformation_profile, session_counts,
             )
 
     # ------------------------------------------------------------------
@@ -769,11 +782,13 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
     # ------------------------------------------------------------------
     scores = {}
     for candidate in collection:
+        is_unplayed = did not in session_counts
         did = candidate['discogs_id']
         genre_score, _ = score_candidate(
             candidate, mood, weather, hour, is_weekend, season,
             target_mood=target_mood,
             transformation_genres=transformation_genres,
+            is_unplayed=is_unplayed,
         )
         if genre_score > 0:
             penalty = recency_penalty(session_counts[did], last_listened.get(did), now)
@@ -782,7 +797,7 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
     if scores:
         return _finalise(
             scores, coll_by_id, mood, target_mood, confidence,
-            weather, time_of_day, day_type, season, transformation_profile,
+            weather, time_of_day, day_type, season, transformation_profile, session_counts,
         )
 
     # ------------------------------------------------------------------
@@ -800,7 +815,7 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
 
 
 def _finalise(scores, coll_by_id, mood, target_mood, confidence,
-              weather, time_of_day, day_type, season, transformation_profile):
+              weather, time_of_day, day_type, season, transformation_profile, session_counts,):
     """
     Given a complete scores dict, build a shortlist for the LLM and return
     the final recommendation with an optional explanation.
@@ -819,6 +834,7 @@ def _finalise(scores, coll_by_id, mood, target_mood, confidence,
             'genres':     c.get('genres') or [],
             'styles':     c.get('styles') or [],
             'score':      score,
+            'is_unplayed': did not in session_counts,
         })
 
     # ------------------------------------------------------------------

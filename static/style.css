@@ -360,6 +360,9 @@ header {
     box-shadow:
         6px 6px 16px rgba(0,0,0,0.35),
         -2px -2px 8px rgba(255,255,255,0.06);
+    overflow: visible;
+    position: relative;
+    z-index: 50;
 }
 
 .header-left {
@@ -394,27 +397,54 @@ header {
     font-weight: 500;
 }
 
-.header-logout-btn {
-    padding: 6px 14px;
-    background: rgba(255,255,255,0.07);
-    color: #f4f1ea;
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 8px;
-    font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow:
-        2px 2px 5px rgba(0,0,0,0.3),
-        -1px -1px 3px rgba(255,255,255,0.05);
-    transition: background 0.15s, box-shadow 0.15s;
+/* Profile dropdown */
+.header-profile-wrap {
+    position: relative;
 }
 
-.header-logout-btn:hover {
-    background: rgba(255,255,255,0.14);
+.profile-dropdown {
+    display: none;
+    position: fixed;
+    background: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
     box-shadow:
-        3px 3px 8px rgba(0,0,0,0.35),
-        -1px -1px 4px rgba(255,255,255,0.07);
+        4px 4px 12px rgba(0,0,0,0.45),
+        -1px -1px 4px rgba(255,255,255,0.04);
+    min-width: 120px;
+    z-index: 9000;
+    animation: dropdownIn 0.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.profile-dropdown.open {
+    display: block;
+}
+
+@keyframes dropdownIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.profile-dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    border: none;
+    border-radius: 0;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    box-shadow: none;
+}
+
+.profile-dropdown-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
 }
 
 /* ===================== MAIN / RESULTS ===================== */
@@ -1440,6 +1470,17 @@ button {
 }
 
 .hv-stats-strip.hv-loading { opacity: 0.5; pointer-events: none; }
+
+/* ===================== HISTORY FADE-IN ANIMATION ===================== */
+@keyframes hvFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.hv-fade-in {
+    opacity: 0;
+    animation: hvFadeIn 0.35s ease forwards;
+}
 
 .hv-stat-card {
     background: var(--bg);

@@ -1,10 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CrateDigger | Behavioral Curation</title>
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
     <div id="loginModal" class="login-overlay">
@@ -62,9 +63,15 @@
                 <nav class="header-nav">
                     <button class="header-nav-btn active" id="navHome"    onclick="closeHistoryView()">Home</button>
                     <button class="header-nav-btn"        id="navHistory" onclick="openHistoryView()">History</button>
+                    <div class="header-profile-wrap" id="headerProfileWrap">
+                        <button class="header-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
+                            👤 <span id="headerUsernameDisplay"></span>
+                        </button>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <button class="profile-dropdown-item" onclick="handleLogout()">Log Out</button>
+                        </div>
+                    </div>
                 </nav>
-                <span class="header-username-label">👤 <span id="headerUsernameDisplay"></span></span>
-                <button class="header-logout-btn" onclick="handleLogout()">Log Out</button>
             </div>
         </header>
         
@@ -492,6 +499,6 @@
             </div>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="{% static 'script.js' %}"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ async function handleLogin() {
     spinner.style.display = 'inline';
 
     try {
-        const res = await fetch('http://localhost:8000/api/login/', {
+        const res = await fetch('/api/login/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ discogs_username: username })
@@ -85,6 +85,27 @@ function unlockApp(username) {
     setTimeout(() => overlay.remove(), 500);
 }
 
+function toggleProfileDropdown(e) {
+    e.stopPropagation();
+    const dd  = document.getElementById('profileDropdown');
+    const btn = document.getElementById('profileBtn');
+    if (dd.classList.contains('open')) {
+        dd.classList.remove('open');
+        return;
+    }
+    // Position below the button using fixed coords (escapes any clipping parent)
+    const rect = btn.getBoundingClientRect();
+    dd.style.top   = (rect.bottom + 6) + 'px';
+    dd.style.right = (window.innerWidth - rect.right) + 'px';
+    dd.classList.add('open');
+}
+
+// Close dropdown when clicking anywhere else
+document.addEventListener('click', function() {
+    const dd = document.getElementById('profileDropdown');
+    if (dd) dd.classList.remove('open');
+});
+
 // Replace the existing handleLogout() with this:
 function handleLogout() {
     document.getElementById('logoutConfirmModal').style.display = 'flex';
@@ -108,7 +129,7 @@ async function fetchCollection(username) {
     resultsArea.innerHTML = '<p>Digging through the crates...</p>';
 
     try {
-        const response = await fetch(`http://localhost:8000/api/collection/${username}`);
+        const response = await fetch(`/api/collection/${username}`);
         const data = await response.json();
 
         if (data.releases) {
@@ -158,7 +179,7 @@ async function loadMoodTags() {
     for (const item of allReleases) {
         const id = item.basic_information.id;
         try {
-            const res = await fetch(`http://localhost:8000/api/mood-tags/?discogs_id=${id}`);
+            const res = await fetch(`/api/mood-tags/?discogs_id=${id}`);
             const data = await res.json();
             if (data.mood_tags && data.mood_tags.length > 0) {
                 renderMoodTags(id, data.mood_tags);
@@ -296,7 +317,7 @@ async function getRecommendation() {
             styles:     item.basic_information.styles  || [],
         }));
 
-        const res  = await fetch('http://localhost:8000/api/recommend/', {
+        const res  = await fetch('/api/recommend/', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({
@@ -315,7 +336,7 @@ async function getRecommendation() {
             // Try to pull the year from the release details cache
             let year = '';
             try {
-                const detailRes = await fetch(`http://localhost:8000/api/release/${r.discogs_id}/`);
+                const detailRes = await fetch(`/api/release/${r.discogs_id}/`);
                 const details   = await detailRes.json();
                 year = details.year || '';
                 // Attach year to the stored recommendation for session use
@@ -465,7 +486,7 @@ async function openModal(release) {
     document.getElementById('preSessionModal').style.display = 'flex';
 
     try {
-        const res = await fetch(`http://localhost:8000/api/release/${release.id}/`);
+        const res = await fetch(`/api/release/${release.id}/`);
         const details = await res.json();
 
         // Year badge
@@ -859,7 +880,7 @@ async function submitFinalSession() {
     };
 
     try {
-        const response = await fetch('http://localhost:8000/api/log-session/', {
+        const response = await fetch('/api/log-session/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -867,7 +888,7 @@ async function submitFinalSession() {
         
         if (response.ok) {
             const id = currentSessionData.album.id;
-            const tagRes = await fetch(`http://localhost:8000/api/mood-tags/?discogs_id=${id}`);
+            const tagRes = await fetch(`/api/mood-tags/?discogs_id=${id}`);
             const tagData = await tagRes.json();
             if (tagData.mood_tags && tagData.mood_tags.length > 0) {
                 renderMoodTags(id, tagData.mood_tags);
@@ -911,7 +932,7 @@ async function loadHistory() {
     strip.classList.add('hv-loading');
 
     try {
-        const res  = await fetch(`http://localhost:8000/api/history/?user_id=${currentUser.id}&period=${historyPeriod}`);
+        const res  = await fetch(`/api/history/?user_id=${currentUser.id}&period=${historyPeriod}`);
         const data = await res.json();
         historyData = data;
         renderStats(data.stats);
@@ -942,6 +963,14 @@ function renderStats(stats) {
     document.getElementById('hvStatGenres').textContent   = (stats.top_genres || []).length
         ? stats.top_genres.map(g => g.genre).join(', ')
         : '—';
+
+    // Stagger the four stat cards
+    document.querySelectorAll('.hv-stat-card').forEach((card, i) => {
+        card.classList.remove('hv-fade-in');
+        void card.offsetWidth; // force reflow so re-opening re-triggers
+        card.style.animationDelay = (i * 60) + 'ms';
+        card.classList.add('hv-fade-in');
+    });
 }
 
 function formatHistoryTime(totalSeconds) {
@@ -956,8 +985,10 @@ function formatHistoryTime(totalSeconds) {
 function renderMostPlayed(albums) {
     const el = document.getElementById('hvMostPlayed');
     if (!albums.length) { el.innerHTML = '<p class="hv-empty-small">No data yet.</p>'; return; }
+    // Base delay: after the 4 stat cards (4 × 60ms = 240ms) + small gap
+    const baseDelay = 280;
     el.innerHTML = albums.map((a, i) => `
-        <div class="hv-mp-row">
+        <div class="hv-mp-row hv-fade-in" style="animation-delay:${baseDelay + i * 55}ms">
             <span class="hv-mp-rank">${i + 1}</span>
             <img class="hv-mp-cover" src="${a.cover_url || 'https://placehold.co/40'}" alt="" onerror="this.src='https://placehold.co/40'">
             <div class="hv-mp-meta">
@@ -974,8 +1005,10 @@ function renderMoodDist(moods) {
     const el  = document.getElementById('hvMoodDist');
     if (!moods.length) { el.innerHTML = '<p class="hv-empty-small">No data yet.</p>'; return; }
     const max = moods[0].count;
-    el.innerHTML = moods.map(m => `
-        <div class="hv-mood-row">
+    // Base delay: after stat cards + most played (up to 5 albums × 55ms ≈ 555ms total)
+    const baseDelay = 320;
+    el.innerHTML = moods.map((m, i) => `
+        <div class="hv-mood-row hv-fade-in" style="animation-delay:${baseDelay + i * 50}ms">
             <span class="hv-mood-label">${MOOD_EMOJI[m.mood] || ''} ${m.mood}</span>
             <div class="hv-mood-bar-wrap">
                 <div class="hv-mood-bar mood-${m.mood}" style="width:${Math.round((m.count / max) * 100)}%"></div>
@@ -1023,15 +1056,17 @@ function renderSessionTable() {
     }
     empty.style.display = 'none';
 
-    tbody.innerHTML = rows.map(s => {
-        const dt     = new Date(s.timestamp);
+    tbody.innerHTML = rows.map((s, i) => {
+        const dt      = new Date(s.timestamp);
         const dateStr = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
         const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-        const dur    = formatHistoryTime(s.total_duration);
+        const dur     = formatHistoryTime(s.total_duration);
         const preEmoji  = MOOD_EMOJI[s.pre_emotion]  || '';
         const postEmoji = MOOD_EMOJI[s.post_emotion] || '';
+        // Cap stagger at 20 rows so a long list doesn't have a 5-second tail
+        const delay = Math.min(i, 20) * 40;
         return `
-        <tr class="hv-tr">
+        <tr class="hv-tr hv-fade-in" style="animation-delay:${delay}ms">
             <td class="hv-td hv-td-date">
                 <span class="hv-date">${dateStr}</span>
                 <span class="hv-time">${timeStr}</span>
