@@ -414,7 +414,7 @@ let currentSessionData = {
 const TT = {
     RECORD_CX: 140, RECORD_CY: 130, RECORD_R: 108,
     PIVOT_X: 265,   PIVOT_Y: 32,
-    NEEDLE_LEN: 118,
+    NEEDLE_LEN: 150,
     REST_ANGLE:  90 * Math.PI / 180,
     PLAY_ANGLE:  115 * Math.PI / 180,
     LIFT_ANGLE:  90 * Math.PI / 180,
@@ -876,6 +876,191 @@ async function submitFinalSession() {
     } catch(err) {
         console.error(err);
     }
+}
+
+// ===================== HISTORY VIEW =====================
+
+let historyData     = { sessions: [], stats: {} };
+let historySortCol  = 'date';
+let historySortDir  = 'desc';
+let historyPeriod   = 'all';
+
+const MOOD_EMOJI = {
+    neutral: '😐', happy: '😊', calm: '😌',
+    sad: '😔', stressed: '😰', tired: '😴',
+};
+
+async function openHistoryView() {
+    document.getElementById('appContainer').classList.add('view-history');
+    document.getElementById('navHome').classList.remove('active');
+    document.getElementById('navHistory').classList.add('active');
+    await loadHistory();
+}
+
+function closeHistoryView() {
+    document.getElementById('appContainer').classList.remove('view-history');
+    document.getElementById('navHome').classList.add('active');
+    document.getElementById('navHistory').classList.remove('active');
+}
+
+async function loadHistory() {
+    if (!currentUser) return;
+
+    const strip = document.getElementById('hvStatsStrip');
+    strip.classList.add('hv-loading');
+
+    try {
+        const res  = await fetch(`http://localhost:8000/api/history/?user_id=${currentUser.id}&period=${historyPeriod}`);
+        const data = await res.json();
+        historyData = data;
+        renderStats(data.stats);
+        renderMostPlayed(data.stats.most_played_albums || []);
+        renderMoodDist(data.stats.mood_distribution   || []);
+        renderSessionTable();
+    } catch (e) {
+        console.error('History load failed', e);
+    } finally {
+        strip.classList.remove('hv-loading');
+    }
+}
+
+function handlePeriodClick(btn) {
+    document.querySelectorAll('.hv-period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    historyPeriod = btn.dataset.period;
+    loadHistory();
+}
+
+// --- Stats strip ---
+function renderStats(stats) {
+    document.getElementById('hvStatTime').textContent     = formatHistoryTime(stats.total_seconds || 0);
+    document.getElementById('hvStatSessions').textContent = stats.session_count || 0;
+    document.getElementById('hvStatArtist').textContent   = stats.most_played_artist
+        ? `${stats.most_played_artist.artist} (${stats.most_played_artist.count})`
+        : '—';
+    document.getElementById('hvStatGenres').textContent   = (stats.top_genres || []).length
+        ? stats.top_genres.map(g => g.genre).join(', ')
+        : '—';
+}
+
+function formatHistoryTime(totalSeconds) {
+    if (!totalSeconds) return '0 min';
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m} min`;
+}
+
+// --- Most played ---
+function renderMostPlayed(albums) {
+    const el = document.getElementById('hvMostPlayed');
+    if (!albums.length) { el.innerHTML = '<p class="hv-empty-small">No data yet.</p>'; return; }
+    el.innerHTML = albums.map((a, i) => `
+        <div class="hv-mp-row">
+            <span class="hv-mp-rank">${i + 1}</span>
+            <img class="hv-mp-cover" src="${a.cover_url || 'https://placehold.co/40'}" alt="" onerror="this.src='https://placehold.co/40'">
+            <div class="hv-mp-meta">
+                <span class="hv-mp-title">${a.title}</span>
+                <span class="hv-mp-artist">${a.artist}</span>
+            </div>
+            <span class="hv-mp-count">${a.count}×</span>
+        </div>
+    `).join('');
+}
+
+// --- Mood distribution bar chart ---
+function renderMoodDist(moods) {
+    const el  = document.getElementById('hvMoodDist');
+    if (!moods.length) { el.innerHTML = '<p class="hv-empty-small">No data yet.</p>'; return; }
+    const max = moods[0].count;
+    el.innerHTML = moods.map(m => `
+        <div class="hv-mood-row">
+            <span class="hv-mood-label">${MOOD_EMOJI[m.mood] || ''} ${m.mood}</span>
+            <div class="hv-mood-bar-wrap">
+                <div class="hv-mood-bar mood-${m.mood}" style="width:${Math.round((m.count / max) * 100)}%"></div>
+            </div>
+            <span class="hv-mood-count">${m.count}</span>
+        </div>
+    `).join('');
+}
+
+// --- Session table ---
+function renderSessionTable() {
+    const search = (document.getElementById('hvSearchInput').value || '').toLowerCase();
+    let rows = [...(historyData.sessions || [])];
+
+    if (search) {
+        rows = rows.filter(s =>
+            s.album_title.toLowerCase().includes(search) ||
+            s.album_artist.toLowerCase().includes(search)
+        );
+    }
+
+    rows.sort((a, b) => {
+        let va, vb;
+        switch (historySortCol) {
+            case 'date':     va = a.timestamp;      vb = b.timestamp;      break;
+            case 'album':    va = a.album_title;    vb = b.album_title;    break;
+            case 'artist':   va = a.album_artist;   vb = b.album_artist;   break;
+            case 'pre':      va = a.pre_emotion;    vb = b.pre_emotion;    break;
+            case 'post':     va = a.post_emotion;   vb = b.post_emotion;   break;
+            case 'duration': va = a.total_duration; vb = b.total_duration; break;
+            default:         va = a.timestamp;      vb = b.timestamp;
+        }
+        if (va < vb) return historySortDir === 'asc' ? -1 :  1;
+        if (va > vb) return historySortDir === 'asc' ?  1 : -1;
+        return 0;
+    });
+
+    const tbody  = document.getElementById('hvTableBody');
+    const empty  = document.getElementById('hvEmptyMsg');
+
+    if (!rows.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = rows.map(s => {
+        const dt     = new Date(s.timestamp);
+        const dateStr = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const dur    = formatHistoryTime(s.total_duration);
+        const preEmoji  = MOOD_EMOJI[s.pre_emotion]  || '';
+        const postEmoji = MOOD_EMOJI[s.post_emotion] || '';
+        return `
+        <tr class="hv-tr">
+            <td class="hv-td hv-td-date">
+                <span class="hv-date">${dateStr}</span>
+                <span class="hv-time">${timeStr}</span>
+            </td>
+            <td class="hv-td hv-td-album">
+                <div class="hv-album-cell">
+                    <img class="hv-row-cover" src="${s.album_cover || 'https://placehold.co/36'}" alt="" onerror="this.src='https://placehold.co/36'">
+                    <span class="hv-row-title">${s.album_title}</span>
+                </div>
+            </td>
+            <td class="hv-td">${s.album_artist}</td>
+            <td class="hv-td"><span class="mood-badge mood-${s.pre_emotion}">${preEmoji} ${s.pre_emotion}</span></td>
+            <td class="hv-td"><span class="mood-badge mood-${s.post_emotion}">${postEmoji} ${s.post_emotion}</span></td>
+            <td class="hv-td hv-td-dur">${dur}</td>
+        </tr>`;
+    }).join('');
+}
+
+function handleHistorySort(th) {
+    const col = th.dataset.col;
+    if (col === historySortCol) {
+        historySortDir = historySortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        historySortCol = col;
+        historySortDir = col === 'date' || col === 'duration' ? 'desc' : 'asc';
+    }
+    document.querySelectorAll('.hv-th .hv-sort-arrow').forEach(a => a.textContent = '');
+    const arrow = th.querySelector('.hv-sort-arrow');
+    if (arrow) arrow.textContent = historySortDir === 'asc' ? '↑' : '↓';
+    renderSessionTable();
 }
 
 // ===================== HELPERS =====================

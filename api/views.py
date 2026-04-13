@@ -296,6 +296,107 @@ def get_recommendation(request):
 
 
 @api_view(['GET'])
+def get_history(request):
+    """
+    Returns all listening sessions for a user, plus aggregate stats.
+
+    Query params:
+      user_id  — required
+      period   — 'day' | 'week' | 'month' | 'all'  (default: 'all')
+    """
+    user_id = request.GET.get('user_id')
+    period  = request.GET.get('period', 'all')
+
+    if not user_id:
+        return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    sessions = ListeningSession.objects.filter(user=user).select_related('album').order_by('-timestamp')
+
+    # --- Period filter for stats (not for the session list itself) ---
+    now = timezone.now()
+    if period == 'day':
+        cutoff = now - timezone.timedelta(days=1)
+    elif period == 'week':
+        cutoff = now - timezone.timedelta(weeks=1)
+    elif period == 'month':
+        cutoff = now - timezone.timedelta(days=30)
+    else:
+        cutoff = None
+
+    stat_sessions = sessions.filter(timestamp__gte=cutoff) if cutoff else sessions
+
+    # --- Session list (always all-time, client sorts/filters) ---
+    session_list = []
+    for s in sessions:
+        session_list.append({
+            'id':             s.id,
+            'timestamp':      s.timestamp.isoformat(),
+            'album_title':    s.album.title,
+            'album_artist':   s.album.artist,
+            'album_cover':    s.album.cover_url,
+            'discogs_id':     s.album.discogs_id,
+            'pre_emotion':    s.pre_emotion,
+            'post_emotion':   s.post_emotion,
+            'side_a_duration': s.side_a_duration,
+            'side_b_duration': s.side_b_duration,
+            'total_duration': s.side_a_duration + s.side_b_duration,
+            'weather':        s.weather,
+        })
+
+    # --- Stats (scoped to selected period) ---
+    from collections import Counter, defaultdict
+
+    total_seconds = sum(s.side_a_duration + s.side_b_duration for s in stat_sessions)
+
+    # Most played albums
+    album_counts = Counter(s.album.discogs_id for s in stat_sessions)
+    album_map    = {s.album.discogs_id: s.album for s in stat_sessions}
+    most_played_albums = [
+        {
+            'discogs_id': did,
+            'title':      album_map[did].title,
+            'artist':     album_map[did].artist,
+            'cover_url':  album_map[did].cover_url,
+            'count':      cnt,
+        }
+        for did, cnt in album_counts.most_common(5)
+    ]
+
+    # Most played artist
+    artist_counts = Counter(s.album.artist for s in stat_sessions)
+    top_artist = artist_counts.most_common(1)
+    most_played_artist = {'artist': top_artist[0][0], 'count': top_artist[0][1]} if top_artist else None
+
+    # Mood distribution (pre_emotion)
+    mood_dist = Counter(s.pre_emotion for s in stat_sessions if s.pre_emotion)
+    mood_distribution = [{'mood': m, 'count': c} for m, c in mood_dist.most_common()]
+
+    # Top 3 genres
+    genre_counts = Counter()
+    for s in stat_sessions:
+        for g in (s.album.genres or []):
+            genre_counts[g] += 1
+    top_genres = [{'genre': g, 'count': c} for g, c in genre_counts.most_common(3)]
+
+    return Response({
+        'sessions': session_list,
+        'stats': {
+            'total_seconds':      total_seconds,
+            'most_played_albums': most_played_albums,
+            'most_played_artist': most_played_artist,
+            'mood_distribution':  mood_distribution,
+            'top_genres':         top_genres,
+            'session_count':      stat_sessions.count(),
+        }
+    })
+
+
+@api_view(['GET'])
 def get_mood_tags(request):
     discogs_id = request.GET.get('discogs_id')
 
