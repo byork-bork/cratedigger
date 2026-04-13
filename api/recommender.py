@@ -16,75 +16,75 @@ load_dotenv(dotenv_path)
 # ---------------------------------------------------------------------------
 GENRE_MOOD_MAP = {
     # Rock family
-    'Rock':              ['energized', 'stressed', 'happy', 'neutral'],
-    'Hard Rock':         ['energized', 'stressed'],
-    'Punk':              ['stressed', 'energized', 'anxious'],
-    'Alternative Rock':  ['neutral', 'sad', 'anxious', 'calm'],
+    'Rock':              ['stressed', 'happy', 'neutral'],
+    'Hard Rock':         ['stressed'],
+    'Punk':              ['stressed'],
+    'Alternative Rock':  ['neutral', 'sad', 'stressed', 'calm'],
     'Indie Rock':        ['neutral', 'calm', 'happy', 'sad'],
     'Psychedelic Rock':  ['calm', 'neutral', 'happy'],
-    'Progressive Rock':  ['focused', 'neutral', 'calm'],
+    'Progressive Rock':  ['neutral', 'calm'],
     'Folk Rock':         ['calm', 'sad', 'neutral', 'happy'],
-    'Classic Rock':      ['happy', 'neutral', 'energized'],
+    'Classic Rock':      ['happy', 'neutral'],
 
     # Electronic
-    'Electronic':        ['focused', 'energized', 'neutral'],
-    'Ambient':           ['calm', 'tired', 'focused', 'anxious'],
-    'Techno':            ['energized', 'stressed', 'focused'],
-    'House':             ['happy', 'energized', 'neutral'],
-    'Drum n Bass':       ['energized', 'stressed', 'anxious'],
-    'IDM':               ['focused', 'neutral', 'calm'],
+    'Electronic':        ['neutral'],
+    'Ambient':           ['calm', 'tired', 'stressed'],
+    'Techno':            ['stressed'],
+    'House':             ['happy', 'neutral'],
+    'Drum n Bass':       ['happy', 'stressed'],
+    'IDM':               ['neutral', 'calm'],
     'Downtempo':         ['calm', 'tired', 'neutral', 'sad'],
     'Trip Hop':          ['sad', 'calm', 'neutral', 'tired'],
 
     # Jazz
-    'Jazz':              ['calm', 'neutral', 'happy', 'focused'],
-    'Bebop':             ['focused', 'energized', 'neutral'],
-    'Hard Bop':          ['energized', 'focused', 'happy'],
-    'Cool Jazz':         ['calm', 'neutral', 'focused'],
-    'Free Jazz':         ['anxious', 'stressed', 'energized'],
-    'Fusion':            ['energized', 'focused', 'happy'],
+    'Jazz':              ['calm', 'neutral', 'happy'],
+    'Bebop':             ['neutral'],
+    'Hard Bop':          ['happy'],
+    'Cool Jazz':         ['calm', 'neutral'],
+    'Free Jazz':         ['stressed'],
+    'Fusion':            ['happy'],
     'Smooth Jazz':       ['calm', 'happy', 'neutral'],
     'Soul Jazz':         ['happy', 'calm', 'neutral'],
-    'Modal Jazz':        ['focused', 'calm', 'neutral'],
+    'Modal Jazz':        ['calm', 'neutral'],
 
     # Classical
-    'Classical':         ['calm', 'focused', 'sad', 'neutral'],
-    'Baroque':           ['focused', 'calm', 'neutral'],
+    'Classical':         ['calm', 'sad', 'neutral'],
+    'Baroque':           ['calm', 'neutral'],
     'Romantic':          ['sad', 'calm', 'happy', 'neutral'],
-    'Contemporary':      ['neutral', 'focused', 'anxious'],
-    'Opera':             ['sad', 'happy', 'energized'],
-    'Chamber Music':     ['calm', 'focused', 'neutral'],
+    'Contemporary':      ['neutral'],
+    'Opera':             ['sad', 'happy'],
+    'Chamber Music':     ['calm', 'neutral'],
 
     # Soul / R&B / Funk
     'Soul':              ['happy', 'sad', 'calm', 'neutral'],
     'R&B':               ['happy', 'calm', 'sad', 'neutral'],
-    'Funk':              ['happy', 'energized', 'neutral'],
-    'Disco':             ['happy', 'energized', 'neutral'],
+    'Funk':              ['happy', 'neutral'],
+    'Disco':             ['happy', 'neutral'],
     'Neo Soul':          ['calm', 'sad', 'neutral', 'happy'],
 
     # Hip Hop
-    'Hip Hop':           ['energized', 'happy', 'neutral', 'stressed'],
-    'Rap':               ['energized', 'stressed', 'neutral'],
-    'Lo-fi':             ['calm', 'tired', 'focused', 'neutral'],
+    'Hip Hop':           ['happy', 'neutral', 'stressed'],
+    'Rap':               ['stressed', 'neutral'],
+    'Lo-fi':             ['calm', 'tired', 'neutral'],
 
     # Folk / Country / Americana
     'Folk':              ['calm', 'sad', 'happy', 'neutral'],
     'Country':           ['happy', 'sad', 'calm', 'neutral'],
     'Americana':         ['calm', 'sad', 'neutral'],
-    'Bluegrass':         ['happy', 'energized', 'calm'],
+    'Bluegrass':         ['happy', 'calm'],
     'Blues':             ['sad', 'calm', 'neutral'],
 
     # Metal
-    'Metal':             ['stressed', 'energized', 'anxious'],
-    'Heavy Metal':       ['stressed', 'energized'],
-    'Death Metal':       ['stressed', 'anxious'],
-    'Black Metal':       ['stressed', 'sad', 'anxious'],
-    'Doom Metal':        ['sad', 'tired', 'anxious'],
-    'Post-Metal':        ['sad', 'anxious', 'neutral'],
+    'Metal':             ['stressed'],
+    'Heavy Metal':       ['stressed'],
+    'Death Metal':       ['stressed'],
+    'Black Metal':       ['stressed', 'sad'],
+    'Doom Metal':        ['sad', 'tired', 'stressed'],
+    'Post-Metal':        ['sad', 'neutral', 'stressed'],
 
     # Pop
-    'Pop':               ['happy', 'neutral', 'energized'],
-    'Synth-pop':         ['happy', 'energized', 'neutral'],
+    'Pop':               ['happy', 'neutral'],
+    'Synth-pop':         ['happy', 'neutral'],
     'Dream Pop':         ['calm', 'sad', 'neutral'],
     'Shoegaze':          ['sad', 'calm', 'neutral', 'tired'],
 
@@ -92,12 +92,12 @@ GENRE_MOOD_MAP = {
     'Reggae':            ['calm', 'happy', 'neutral'],
     'Dub':               ['calm', 'neutral', 'tired'],
     'World Music':       ['neutral', 'happy', 'calm'],
-    'Latin':             ['happy', 'energized', 'neutral'],
-    'Afrobeat':          ['happy', 'energized', 'calm'],
+    'Latin':             ['happy', 'neutral'],
+    'Afrobeat':          ['happy', 'calm'],
     'Bossa Nova':        ['calm', 'happy', 'neutral'],
 
     # Misc
-    'Spoken Word':       ['neutral', 'focused', 'calm'],
+    'Spoken Word':       ['neutral', 'calm'],
     'Soundtrack':        ['neutral', 'calm', 'sad', 'happy'],
     'Stage & Screen':    ['happy', 'sad', 'neutral'],
     "Children's":        ['happy', 'neutral'],
@@ -106,26 +106,25 @@ GENRE_MOOD_MAP = {
 
 # Moods that are "negative" and where a listener likely wants to shift away
 # (used when we have no personal history to infer intent from)
-DEFAULT_ESCAPE_MOODS = {'stressed', 'sad', 'tired', 'anxious'}
+DEFAULT_ESCAPE_MOODS = {'stressed', 'sad', 'tired'}
 
 # For each "escape" mood, what moods does a listener typically want to reach?
 DEFAULT_TARGET_MOOD = {
     'stressed': 'calm',
     'sad':      'happy',
-    'tired':    'energized',
-    'anxious':  'calm',
+    'tired':    'happy',
 }
 
 # Weather → moods they complement
 # Used for context signals in Path A (behavioural) scoring.
 WEATHER_MOOD_MAP = {
-    'rainy':  ['calm', 'sad', 'focused', 'neutral'],
-    'sunny':  ['happy', 'energized', 'neutral'],
+    'rainy':  ['calm', 'sad', 'neutral'],
+    'clear':  ['happy', 'neutral'],
     'cloudy': ['neutral', 'tired', 'calm'],
-    'cold':   ['calm', 'focused', 'tired'],
-    'warm':   ['happy', 'energized'],
-    'stormy': ['anxious', 'stressed', 'energized'],
-    'snowy':  ['calm', 'happy', 'focused'],
+    'cold':   ['calm', 'tired'],
+    'warm':   ['happy'],
+    'stormy': ['stressed', 'calm'],
+    'snowy':  ['calm', 'happy'],
 }
 
 # Weather → genres/styles that suit it well.
@@ -144,7 +143,7 @@ WEATHER_GENRE_AFFINITY = {
         'Disco':           -2.0, 'Funk':            -2.0, 'Latin':          -2.0,
         'Punk':            -1.5, 'Hard Rock':       -1.5, 'Drum n Bass':    -1.5,
     },
-    'sunny': {
+    'clear': {
         'Pop':              2.5, 'Disco':            2.5, 'Funk':            2.5,
         'Afrobeat':         2.5, 'Latin':            2.0, 'Reggae':          2.0,
         'Soul':             2.0, 'Classic Rock':     1.5, 'Bluegrass':       1.5,
@@ -200,9 +199,9 @@ WEATHER_GENRE_AFFINITY = {
 
 # Time of day → moods that naturally fit
 TIME_MOOD_MAP = {
-    'early_morning': ['calm', 'focused', 'tired'],
-    'morning':       ['happy', 'energized', 'focused'],
-    'afternoon':     ['neutral', 'happy', 'energized'],
+    'early_morning': ['calm', 'tired'],
+    'morning':       ['happy'],
+    'afternoon':     ['neutral', 'happy'],
     'evening':       ['calm', 'neutral', 'happy', 'sad'],
     'night':         ['calm', 'sad', 'tired', 'neutral'],
     'late_night':    ['tired', 'calm', 'sad'],
@@ -210,16 +209,16 @@ TIME_MOOD_MAP = {
 
 # Day type → moods that naturally fit
 DAY_MOOD_MAP = {
-    'weekday': ['focused', 'neutral', 'stressed', 'energized'],
-    'weekend': ['happy', 'calm', 'neutral', 'energized'],
+    'weekday': ['neutral', 'stressed', 'happy'],
+    'weekend': ['happy', 'calm', 'neutral'],
 }
 
 # Season → moods that naturally fit
 SEASON_MOOD_MAP = {
-    'spring': ['happy', 'energized', 'calm', 'neutral'],
-    'summer': ['happy', 'energized', 'neutral'],
-    'fall':   ['sad', 'calm', 'neutral', 'focused'],
-    'winter': ['calm', 'sad', 'tired', 'focused'],
+    'spring': ['happy', 'calm', 'neutral'],
+    'summer': ['happy', 'neutral'],
+    'fall':   ['sad', 'calm', 'neutral'],
+    'winter': ['calm', 'sad', 'tired'],
 }
 
 

@@ -841,7 +841,8 @@ function endActiveSession() {
 
 // ===================== SAVE SESSION =====================
 async function submitFinalSession() {
-    currentSessionData.postEmotion = document.getElementById('postEmotion').value;
+    const selected = document.querySelector('input[name="postEmotionRadio"]:checked');
+    currentSessionData.postEmotion = selected ? selected.value : 'neutral';
     
     const payload = {
         album_id: currentSessionData.album.id,

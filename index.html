@@ -59,11 +59,11 @@
                 <h1>CrateDigger</h1>
             </div>
             <div class="header-user" id="headerUser" style="display:none;">
-                <span class="header-username-label">👤 <span id="headerUsernameDisplay"></span></span>
                 <nav class="header-nav">
                     <button class="header-nav-btn active" id="navHome"    onclick="closeHistoryView()">Home</button>
                     <button class="header-nav-btn"        id="navHistory" onclick="openHistoryView()">History</button>
                 </nav>
+                <span class="header-username-label">👤 <span id="headerUsernameDisplay"></span></span>
                 <button class="header-logout-btn" onclick="handleLogout()">Log Out</button>
             </div>
         </header>
@@ -219,7 +219,7 @@
                         <label class="sidebar-label">What's the weather like?</label>
                         <select id="recommendWeatherSelect" class="sidebar-select">
                             <option value="">— no preference —</option>
-                            <option value="sunny">☀️ Sunny</option>
+                            <option value="clear">☀️ Clear</option>
                             <option value="cloudy">☁️ Cloudy</option>
                             <option value="rainy">🌧️ Rainy</option>
                             <option value="stormy">⛈️ Stormy</option>
@@ -258,7 +258,7 @@
                 </div>
                 <div class="rec-result-footer">
                     <button class="pre-listen-btn" onclick="startSessionFromRecommendation()">▶ Start Listening</button>
-                    <button class="pre-close-link rec-close-btn" onclick="closeRecommendModal()">Close</button>
+                    <button class="pre-close-link rec-close-btn" onclick="closeRecommendModal()">Back to browsing</button>
                 </div>
             </div>
         </div>
@@ -343,7 +343,7 @@
                                     <input type="radio" name="weatherRadio" value="" checked> — no preference —
                                 </label>
                                 <label class="pre-mood-option">
-                                    <input type="radio" name="weatherRadio" value="sunny"> ☀️ Sunny
+                                    <input type="radio" name="weatherRadio" value="clear"> ☀️ Clear
                                 </label>
                                 <label class="pre-mood-option">
                                     <input type="radio" name="weatherRadio" value="cloudy"> ☁️ Cloudy
@@ -458,20 +458,38 @@
     </div>
 
     <div id="postSessionModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h2>Session Complete</h2>
-            <p>Total Time: <span id="totalTimeDisplay"></span></p>
-            
-            <label>How are you feeling now?</label>
-            <select id="postEmotion">
-                <option value="neutral">😐 Neutral</option>
-                <option value="happy">😊 Happy</option>
-                <option value="calm">😌 Calm</option>
-                <option value="sad">😔 Sad</option>
-                <option value="stressed">😰 Stressed</option>
-                <option value="tired">😴 Tired</option>
-            </select>
-            <button onclick="submitFinalSession()">Save to Database</button>
+        <div class="modal-content post-session-content">
+            <div class="post-session-header">
+                <div class="post-session-icon">✓</div>
+                <h2 class="post-session-title">Session Complete</h2>
+                <p class="post-session-sub">Total time: <span id="totalTimeDisplay" class="post-session-time"></span></p>
+            </div>
+            <div class="post-session-body">
+                <label class="sidebar-label">How are you feeling now?</label>
+                <div class="post-mood-grid">
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="neutral" checked> 😐 Neutral
+                    </label>
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="happy"> 😊 Happy
+                    </label>
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="calm"> 😌 Calm
+                    </label>
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="sad"> 😔 Sad
+                    </label>
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="stressed"> 😰 Stressed
+                    </label>
+                    <label class="pre-mood-option">
+                        <input type="radio" name="postEmotionRadio" value="tired"> 😴 Tired
+                    </label>
+                </div>
+            </div>
+            <div class="post-session-footer">
+                <button class="pre-listen-btn" onclick="submitFinalSession()">Save Session</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>
