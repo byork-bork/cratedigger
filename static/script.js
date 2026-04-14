@@ -647,9 +647,16 @@ function ttStopSpin()  {
 
 function ttStartTimer() {
     if (tt.timerInterval) return;
+
+    // 5999 seconds caps the display at exactly 99:59
+    const MAX_SECONDS = 5999;
+
     tt.timerInterval = setInterval(() => {
-        if (tt.currentSide === 'A') { currentSessionData.timeA++; }
-        else                        { currentSessionData.timeB++; }
+        if (tt.currentSide === 'A') { 
+            currentSessionData.timeA = Math.min(currentSessionData.timeA + 1, MAX_SECONDS);
+        } else { 
+            currentSessionData.timeB = Math.min(currentSessionData.timeB + 1, MAX_SECONDS);
+        }
         ttUpdateTimerDisplay();
     }, 1000);
 }

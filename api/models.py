@@ -1,5 +1,6 @@
 # api/models.py
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 
 EMOTION_CHOICES = [
@@ -79,8 +80,8 @@ class ListeningSession(models.Model):
     pre_emotion     = models.CharField(max_length=100, choices=EMOTION_CHOICES)
     post_emotion    = models.CharField(max_length=100, choices=EMOTION_CHOICES)
     
-    side_a_duration = models.IntegerField(default=0)
-    side_b_duration = models.IntegerField(default=0)
+    side_a_duration = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(5999)])
+    side_b_duration = models.PositiveIntegerField(default=0, validators=[MaxValueValidator(5999)])
     
     day_of_week     = models.IntegerField()
     hour_of_day     = models.IntegerField()
