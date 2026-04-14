@@ -8,13 +8,13 @@
   Pressed element → dark TL, light BR (box-shadow inset)
 */
 :root {
-    --bg-page:     #c5c3c1;   /* page canvas — darker warm sand */
+    --bg-page:     linear-gradient(145deg, #c5c3c1, #a39e99);   /* page canvas — darker warm sand */
     --bg:          #f0ede4;   /* raised panel surface */
     --bg-card:     #f4f1ea;   /* slightly lighter surface for cards/modals */
     --neu-light-light:   #ffffff;
     --neu-dark-light:    #c8c4b8;
-    --neu-light-dark:   #e4e2e0;
-    --neu-dark-dark:    #a8a6a3;
+    --neu-light-dark:   #d3d1ce;
+    --neu-dark-dark:    #918e8a;
     --neu-dark-sm: #d4d0c8;
 
     --shadow-raised-light:
@@ -508,25 +508,23 @@ header {
 .main {
     display: flex;
     flex-direction: column;
+    padding-bottom: 0px 0px 0px 20px;
     border-radius: 14px;
     background: var(--bg);
     box-shadow:
         var(--shadow-raised-dark),
         inset 2px 2px 0px rgba(255,255,255,0.75),
         inset -1px -1px 0px rgba(0,0,0,0.06);
-    padding: 20px;
-    margin-bottom: 10px;
     margin-right: 20px;
     margin-top: 20px;
-    min-height: 0;
-    min-width: 700px;
-    height: 80vh;
+    height: 84.5vh;
+    min-width: 738px;
 }
 
 .search-container {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    padding: 20px;
 }
 
 input {
@@ -602,8 +600,9 @@ button {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
-    overflow-y: auto;
+    padding: 0px 12px 20px 20px;
     border-radius: 12px;
+    overflow-y: auto;
 }
 
 .results-grid::-webkit-scrollbar { width: 8px; }
@@ -672,16 +671,15 @@ button {
 /* ===================== SIDEBAR ===================== */
 .sidebar {
     border-radius: 14px;
-    padding: 20px;
+    padding: 0px 20px;
     background: var(--bg);
     box-shadow:
         var(--shadow-raised-dark),
         inset 2px 2px 0px rgba(255,255,255,0.75),
         inset -1px -1px 0px rgba(0,0,0,0.06);
     margin-top: 20px;
-    margin-bottom: 20px;
     overflow-y: auto;
-    height: 80vh;
+    height: 84.5vh;
     min-width: 190px;
 }
 
@@ -818,7 +816,7 @@ button {
 .card-mood-tag:not(:empty) { display: block; }
 
 .mood-happy     { background: linear-gradient(145deg, #ffbd42, #dd9520); color: #fff; }
-.mood-calm      { background: linear-gradient(145deg, #61a6e4, #2d6ea7); color: #fff; }
+.mood-calm      { background: linear-gradient(145deg, #61dbe4, #2d99a7); color: #fff; }
 .mood-stressed  { background: linear-gradient(145deg, #cd3d2e, #972a20); color: #fff; }
 .mood-tired     { background: linear-gradient(145deg, #b87bcf, #995f9e); color: #fff; }
 .mood-sad       { background: linear-gradient(145deg, #4174d1, #194783); color: #fff; }
@@ -1502,7 +1500,7 @@ button {
     flex-direction: column;
     border-radius: 14px;
     gap: 16px;
-    padding: 15px;
+    padding: 20px 15px 15px 15px;
     overflow-y: auto;
     min-height: 0;
     height: 80vh;
