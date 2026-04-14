@@ -39,7 +39,6 @@ body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
     color: #333;
-    padding: 10px;
     margin: 0;
 }
 
@@ -338,18 +337,55 @@ a {
 /* ===================== CONTAINER ===================== */
 .container {
     height: 100vh;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 2fr 1fr;
-    grid-template-areas:
-        "header header"
-        "results sidebar"
-        "history history";
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
+
+/* Centering wrapper for the header */
+.header-wrap {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px 20px 0;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 50;
+    flex-shrink: 0;
+}
+
+/* Centering wrapper for results + sidebar */
+.content-wrap {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px 10px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 3.8fr 1.2fr;
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* History view sits outside content-wrap, needs its own centering */
+.history-wrap {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px 20px;
+    box-sizing: border-box;
+    flex: 1;
+    min-height: 0;
+    display: none;
+}
+
+.container.view-history .content-wrap { display: none; }
+.container.view-history .history-wrap  { display: flex; flex-direction: column; }
 
 /* ===================== HEADER ===================== */
 header {
-    grid-area: header;
     border-radius: 14px;
     background: linear-gradient(145deg, #3a3a3a, #222);
     color: white;
@@ -362,7 +398,7 @@ header {
         -2px -2px 8px rgba(255,255,255,0.06);
     overflow: visible;
     position: relative;
-    z-index: 50;
+    min-width: 702px;
 }
 
 .header-left {
@@ -449,19 +485,18 @@ header {
 
 /* ===================== MAIN / RESULTS ===================== */
 .main {
-    grid-area: results;
     display: flex;
     flex-direction: column;
     border-radius: 14px;
     background: var(--bg);
     box-shadow: var(--shadow-raised-lg);
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     margin-right: 20px;
     margin-top: 20px;
     min-height: 0;
-    min-width: 702px;
-    height: 77vh;
+    min-width: 700px;
+    height: 80vh;
 }
 
 .search-container {
@@ -541,6 +576,7 @@ button {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
     overflow-y: auto;
+    border-radius: 12px;
 }
 
 .results-grid::-webkit-scrollbar { width: 8px; }
@@ -605,14 +641,15 @@ button {
 
 /* ===================== SIDEBAR ===================== */
 .sidebar {
-    grid-area: sidebar;
     border-radius: 14px;
     padding: 20px;
-    height: 77vh;
     background: var(--bg);
     box-shadow: var(--shadow-raised-lg);
     margin-top: 20px;
+    margin-bottom: 20px;
     overflow-y: auto;
+    height: 80vh;
+    min-width: 190px;
 }
 
 .sidebar-section { margin-bottom: 8px; }
@@ -800,29 +837,6 @@ button {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-
-.rec-empty { font-style: italic; color: #999; }
-
-.rec-clear-btn {
-    display: block;
-    width: 100%;
-    margin-top: 8px;
-    padding: 7px;
-    background: var(--bg);
-    border: none;
-    border-radius: 8px;
-    font-size: 12px;
-    color: #888;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    box-shadow: var(--shadow-raised);
-    transition: box-shadow 0.15s, color 0.15s;
-}
-
-.rec-clear-btn:hover {
-    color: #444;
-    box-shadow: var(--shadow-inset-sm);
 }
 
 /* ===================== MODAL BASE ===================== */
@@ -1421,23 +1435,17 @@ button {
 
 /* ===================== HISTORY VIEW ===================== */
 .history-view {
-    grid-area: history;
-    display: none;
+    display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 20px;
+    padding: 20px 0 10px;
     overflow-y: auto;
     min-height: 0;
+    flex: 1;
 }
 
-.container.view-history .results,
-.container.view-history .sidebar { display: none; }
-
-.container.view-history .history-view {
-    display: flex;
-    grid-row: 2;
-    grid-column: 1 / -1;
-}
+.container.view-history .results { display: none; }
+.container.view-history .sidebar  { display: none; }
 
 .hv-period-tabs { display: flex; gap: 6px; }
 
@@ -1515,7 +1523,7 @@ button {
     gap: 20px;
     flex: 1;
     min-height: 0;
-    min-width: 20px;
+    min-width: 0;
 }
 
 .hv-sidebar { display: flex; flex-direction: column; gap: 16px; }

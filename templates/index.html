@@ -54,28 +54,32 @@
     </div>
 
     <div id="appContainer" class="container app-locked">
-        <header class="header">
-            <div class="header-left" onclick="closeHistoryView()" style="cursor:pointer;" title="Go home">
-                <span class="header-logo-icon">📀</span>
-                <h1>CrateDigger</h1>
-            </div>
-            <div class="header-user" id="headerUser" style="display:none;">
-                <nav class="header-nav">
-                    <button class="header-nav-btn active" id="navHome"    onclick="closeHistoryView()">Home</button>
-                    <button class="header-nav-btn"        id="navHistory" onclick="openHistoryView()">History</button>
-                    <div class="header-profile-wrap" id="headerProfileWrap">
-                        <button class="header-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
-                            👤 <span id="headerUsernameDisplay"></span>
-                        </button>
-                        <div class="profile-dropdown" id="profileDropdown">
-                            <button class="profile-dropdown-item" onclick="handleLogout()">Log Out</button>
+
+        <div class="header-wrap">
+            <header class="header">
+                <div class="header-left" onclick="closeHistoryView()" style="cursor:pointer;" title="Go home">
+                    <span class="header-logo-icon">📀</span>
+                    <h1>CrateDigger</h1>
+                </div>
+                <div class="header-user" id="headerUser" style="display:none;">
+                    <nav class="header-nav">
+                        <button class="header-nav-btn active" id="navHome"    onclick="closeHistoryView()">Home</button>
+                        <button class="header-nav-btn"        id="navHistory" onclick="openHistoryView()">History</button>
+                        <div class="header-profile-wrap" id="headerProfileWrap">
+                            <button class="header-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
+                                👤 <span id="headerUsernameDisplay"></span>
+                            </button>
+                            <div class="profile-dropdown" id="profileDropdown">
+                                <button class="profile-dropdown-item" onclick="handleLogout()">Log Out</button>
+                            </div>
                         </div>
-                    </div>
-                </nav>
-            </div>
-        </header>
-        
-        <main class="results">
+                    </nav>
+                </div>
+            </header>
+        </div>
+
+        <div class="content-wrap">
+            <main class="results">
             <section class="main">
                 <section class="search-container">
                     <input type="text" id="searchInput" placeholder="Search collection..." oninput="applyFilters()">
@@ -125,8 +129,10 @@
                 </button>
             </section>
         </aside>
+        </div><!-- end .content-wrap -->
 
         <!-- ===================== HISTORY VIEW ===================== -->
+        <div class="history-wrap">
         <div id="historyView" class="history-view">
 
             <!-- Stats strip -->
@@ -197,9 +203,10 @@
                 </main>
 
             </div>
-        </div>
+        </div><!-- end #historyView -->
+        </div><!-- end .history-wrap -->
 
-    </div>
+    </div><!-- end #appContainer -->
 
     <div id="recommendModal" class="modal" style="display:none;">
         <div class="modal-content rec-modal-content">
@@ -266,7 +273,7 @@
                 </div>
                 <div class="rec-result-footer">
                     <button class="pre-listen-btn" onclick="startSessionFromRecommendation()">▶ Start Listening</button>
-                    <button class="pre-close-link rec-close-btn" onclick="closeRecommendModal()">Back to browsing</button>
+                    <button class="rec-close-btn" onclick="closeRecommendModal()">Back to browsing</button>
                 </div>
             </div>
         </div>

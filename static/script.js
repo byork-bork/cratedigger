@@ -1150,3 +1150,7 @@ function closeAllModals() {
 document.getElementById('preSessionModal').addEventListener('click', function(e) {
     if (e.target === this) closeAllModals();
 });
+
+document.getElementById('recommendModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAllModals();
+});
