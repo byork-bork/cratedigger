@@ -54,7 +54,6 @@
     </div>
 
     <div id="appContainer" class="container app-locked">
-
         <div class="header-wrap">
             <header class="header">
                 <div class="header-left" onclick="closeHistoryView()" style="cursor:pointer;" title="Go home">
@@ -65,6 +64,12 @@
                     <nav class="header-nav">
                         <button class="header-nav-btn active" id="navHome"    onclick="closeHistoryView()">Home</button>
                         <button class="header-nav-btn"        id="navHistory" onclick="openHistoryView()">History</button>
+                        <a href="https://www.discogs.com/"
+                            target="_blank"
+                            class="header-nav-btn"
+                            id="navDiscogs">
+                            Discogs
+                        </a>
                         <div class="header-profile-wrap" id="headerProfileWrap">
                             <button class="header-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
                                 👤 <span id="headerUsernameDisplay"></span>
@@ -80,130 +85,130 @@
 
         <div class="content-wrap">
             <main class="results">
-            <section class="main">
-                <section class="search-container">
-                    <input type="text" id="searchInput" placeholder="Search collection..." oninput="applyFilters()">
-                    
-                    <div id="sortOptions">
-                        <button class="sort-btn active" data-sort="added" onclick="handleSortClick(this)">
-                            Date Added <span class="sort-arrow">↑</span>
-                        </button>
-                        <button class="sort-btn" data-sort="artist" onclick="handleSortClick(this)">
-                            Artist <span class="sort-arrow"></span>
-                        </button>
-                        <button class="sort-btn" data-sort="title" onclick="handleSortClick(this)">
-                            Title <span class="sort-arrow"></span>
-                        </button>
-                        <button class="sort-btn" data-sort="year" onclick="handleSortClick(this)">
-                            Release Year <span class="sort-arrow"></span>
-                        </button>
+                <section class="main">
+                    <section class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search collection..." oninput="applyFilters()">
+                        
+                        <div id="sortOptions">
+                            <button class="sort-btn active" data-sort="added" onclick="handleSortClick(this)">
+                                Date Added <span class="sort-arrow">↑</span>
+                            </button>
+                            <button class="sort-btn" data-sort="artist" onclick="handleSortClick(this)">
+                                Artist <span class="sort-arrow"></span>
+                            </button>
+                            <button class="sort-btn" data-sort="title" onclick="handleSortClick(this)">
+                                Title <span class="sort-arrow"></span>
+                            </button>
+                            <button class="sort-btn" data-sort="year" onclick="handleSortClick(this)">
+                                Release Year <span class="sort-arrow"></span>
+                            </button>
+                        </div>
+                    </section>
+                    <div id="resultsArea" class="results-grid"></div>
+                    <div id="loadingSentinel" style="height: 20px; width: 100%;"></div>
+                </section>
+            </main>
+ 
+            <aside class="sidebar">
+                <h2>How are you doing today?</h2>
+                <!-- MOOD FILTER -->
+                <section class="sidebar-section">
+                    <h2 class="sidebar-heading">Filter by Mood</h2>
+                    <div class="mood-filter-grid">
+                        <button class="mood-filter-btn" data-mood="neutral"   onclick="handleMoodFilterClick(this)">😐 Neutral</button>
+                        <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
+                        <button class="mood-filter-btn" data-mood="calm"      onclick="handleMoodFilterClick(this)">😌 Calm</button>
+                        <button class="mood-filter-btn" data-mood="sad"       onclick="handleMoodFilterClick(this)">😔 Sad</button>
+                        <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😰 Stressed</button>
+                        <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
                     </div>
                 </section>
-                <div id="resultsArea" class="results-grid"></div>
-                <div id="loadingSentinel" style="height: 20px; width: 100%;"></div>
-            </section>
-        </main>
- 
-        <aside class="sidebar">
-            <h2>How are you doing today?</h2>
-            <!-- MOOD FILTER -->
-            <section class="sidebar-section">
-                <h2 class="sidebar-heading">Filter by Mood</h2>
-                <div class="mood-filter-grid">
-                    <button class="mood-filter-btn" data-mood="neutral"   onclick="handleMoodFilterClick(this)">😐 Neutral</button>
-                    <button class="mood-filter-btn" data-mood="happy"     onclick="handleMoodFilterClick(this)">😊 Happy</button>
-                    <button class="mood-filter-btn" data-mood="calm"      onclick="handleMoodFilterClick(this)">😌 Calm</button>
-                    <button class="mood-filter-btn" data-mood="sad"       onclick="handleMoodFilterClick(this)">😔 Sad</button>
-                    <button class="mood-filter-btn" data-mood="stressed"  onclick="handleMoodFilterClick(this)">😰 Stressed</button>
-                    <button class="mood-filter-btn" data-mood="tired"     onclick="handleMoodFilterClick(this)">😴 Tired</button>
-                </div>
-            </section>
- 
-            <hr class="sidebar-divider">
- 
-            <!-- RECOMMENDER -->
-            <section class="sidebar-section">
-                <h2 class="sidebar-heading">Don't know what to listen to?</h2>
-                <button class="sidebar-recommend-btn" onclick="openRecommendModal()">
-                    Get a recommendation!
-                </button>
-            </section>
-        </aside>
+    
+                <hr class="sidebar-divider">
+    
+                <!-- RECOMMENDER -->
+                <section class="sidebar-section">
+                    <h2 class="sidebar-heading">Don't know what to listen to?</h2>
+                    <button class="sidebar-recommend-btn" onclick="openRecommendModal()">
+                        Get a recommendation!
+                    </button>
+                </section>
+            </aside>
         </div><!-- end .content-wrap -->
 
         <!-- ===================== HISTORY VIEW ===================== -->
         <div class="history-wrap">
-        <div id="historyView" class="history-view">
+            <div id="historyView" class="history-view">
 
-            <!-- Stats strip -->
-            <section class="hv-stats-strip" id="hvStatsStrip">
-                <div class="hv-stat-card">
-                    <span class="hv-stat-label">Total time</span>
-                    <span class="hv-stat-val" id="hvStatTime">—</span>
-                </div>
-                <div class="hv-stat-card">
-                    <span class="hv-stat-label">Sessions</span>
-                    <span class="hv-stat-val" id="hvStatSessions">—</span>
-                </div>
-                <div class="hv-stat-card">
-                    <span class="hv-stat-label">Top artist</span>
-                    <span class="hv-stat-val" id="hvStatArtist">—</span>
-                </div>
-                <div class="hv-stat-card">
-                    <span class="hv-stat-label">Top genres</span>
-                    <span class="hv-stat-val" id="hvStatGenres">—</span>
-                </div>
-            </section>
+                <!-- Stats strip -->
+                <section class="hv-stats-strip" id="hvStatsStrip">
+                    <div class="hv-stat-card">
+                        <span class="hv-stat-label">Total time</span>
+                        <span class="hv-stat-val" id="hvStatTime">—</span>
+                    </div>
+                    <div class="hv-stat-card">
+                        <span class="hv-stat-label">Sessions</span>
+                        <span class="hv-stat-val" id="hvStatSessions">—</span>
+                    </div>
+                    <div class="hv-stat-card">
+                        <span class="hv-stat-label">Top artist</span>
+                        <span class="hv-stat-val" id="hvStatArtist">—</span>
+                    </div>
+                    <div class="hv-stat-card">
+                        <span class="hv-stat-label">Top genres</span>
+                        <span class="hv-stat-val" id="hvStatGenres">—</span>
+                    </div>
+                </section>
 
-            <div class="hv-columns">
+                <div class="hv-columns">
 
-                <!-- Left sidebar: most played + mood dist -->
-                <aside class="hv-sidebar">
-                    <section class="hv-sidebar-section">
-                        <h3 class="hv-sidebar-heading">Most played</h3>
-                        <div id="hvMostPlayed" class="hv-most-played-list"></div>
-                    </section>
-                    <section class="hv-sidebar-section">
-                        <h3 class="hv-sidebar-heading">Mood distribution</h3>
-                        <div id="hvMoodDist" class="hv-mood-dist"></div>
-                    </section>
-                </aside>
+                    <!-- Left sidebar: most played + mood dist -->
+                    <aside class="hv-sidebar">
+                        <section class="hv-sidebar-section">
+                            <h3 class="hv-sidebar-heading">Most played</h3>
+                            <div id="hvMostPlayed" class="hv-most-played-list"></div>
+                        </section>
+                        <section class="hv-sidebar-section">
+                            <h3 class="hv-sidebar-heading">Mood distribution</h3>
+                            <div id="hvMoodDist" class="hv-mood-dist"></div>
+                        </section>
+                    </aside>
 
-                <!-- Right: session table -->
-                <main class="hv-main">
-                    <div class="hv-table-header">
-                        <div class="hv-table-title-row">
-                            <h3 class="hv-sidebar-heading" style="margin:0;">Session log</h3>
-                            <div class="hv-period-tabs">
-                                <button class="hv-period-btn active" data-period="all"   onclick="handlePeriodClick(this)">All time</button>
-                                <button class="hv-period-btn"        data-period="month" onclick="handlePeriodClick(this)">Month</button>
-                                <button class="hv-period-btn"        data-period="week"  onclick="handlePeriodClick(this)">Week</button>
-                                <button class="hv-period-btn"        data-period="day"   onclick="handlePeriodClick(this)">Today</button>
+                    <!-- Right: session table -->
+                    <main class="hv-main">
+                        <div class="hv-table-header">
+                            <div class="hv-table-title-row">
+                                <h3 class="hv-sidebar-heading" style="margin:0;">Session log</h3>
+                                <div class="hv-period-tabs">
+                                    <button class="hv-period-btn active" data-period="all"   onclick="handlePeriodClick(this)">All time</button>
+                                    <button class="hv-period-btn"        data-period="month" onclick="handlePeriodClick(this)">Month</button>
+                                    <button class="hv-period-btn"        data-period="week"  onclick="handlePeriodClick(this)">Week</button>
+                                    <button class="hv-period-btn"        data-period="day"   onclick="handlePeriodClick(this)">Today</button>
+                                </div>
                             </div>
+                            <input type="text" id="hvSearchInput" class="hv-search" placeholder="Search album or artist…" oninput="renderSessionTable()">
                         </div>
-                        <input type="text" id="hvSearchInput" class="hv-search" placeholder="Search album or artist…" oninput="renderSessionTable()">
-                    </div>
-                    <div class="hv-table-wrap">
-                        <table class="hv-table" id="hvTable">
-                            <thead>
-                                <tr>
-                                    <th class="hv-th" data-col="date"     onclick="handleHistorySort(this)">Date <span class="hv-sort-arrow">↓</span></th>
-                                    <th class="hv-th" data-col="album"    onclick="handleHistorySort(this)">Album <span class="hv-sort-arrow"></span></th>
-                                    <th class="hv-th" data-col="artist"   onclick="handleHistorySort(this)">Artist <span class="hv-sort-arrow"></span></th>
-                                    <th class="hv-th" data-col="pre"      onclick="handleHistorySort(this)">Mood before <span class="hv-sort-arrow"></span></th>
-                                    <th class="hv-th" data-col="post"     onclick="handleHistorySort(this)">Mood after <span class="hv-sort-arrow"></span></th>
-                                    <th class="hv-th" data-col="duration" onclick="handleHistorySort(this)">Time <span class="hv-sort-arrow"></span></th>
-                                    <th class="hv-th hv-th-notes">Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="hvTableBody"></tbody>
-                        </table>
-                        <p id="hvEmptyMsg" class="hv-empty" style="display:none;">No sessions found.</p>
-                    </div>
-                </main>
+                        <div class="hv-table-wrap">
+                            <table class="hv-table" id="hvTable">
+                                <thead>
+                                    <tr>
+                                        <th class="hv-th" data-col="date"     onclick="handleHistorySort(this)">Date <span class="hv-sort-arrow">↓</span></th>
+                                        <th class="hv-th" data-col="album"    onclick="handleHistorySort(this)">Album <span class="hv-sort-arrow"></span></th>
+                                        <th class="hv-th" data-col="artist"   onclick="handleHistorySort(this)">Artist <span class="hv-sort-arrow"></span></th>
+                                        <th class="hv-th" data-col="pre"      onclick="handleHistorySort(this)">Mood before <span class="hv-sort-arrow"></span></th>
+                                        <th class="hv-th" data-col="post"     onclick="handleHistorySort(this)">Mood after <span class="hv-sort-arrow"></span></th>
+                                        <th class="hv-th" data-col="duration" onclick="handleHistorySort(this)">Time <span class="hv-sort-arrow"></span></th>
+                                        <th class="hv-th hv-th-notes">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hvTableBody"></tbody>
+                            </table>
+                            <p id="hvEmptyMsg" class="hv-empty" style="display:none;">No sessions found.</p>
+                        </div>
+                    </main>
 
-            </div>
-        </div><!-- end #historyView -->
+                </div>
+            </div><!-- end #historyView -->
         </div><!-- end .history-wrap -->
 
     </div><!-- end #appContainer -->
