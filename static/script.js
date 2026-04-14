@@ -388,10 +388,17 @@ function startSessionFromRecommendation() {
     currentSessionData.preEmotion = lastRecommendMood    || 'neutral';
     currentSessionData.weather    = lastRecommendWeather || '';
 
+    const album = currentSessionData.album;
+
     resetTimers();
     document.getElementById('recommendModal').style.display = 'none';
-    document.getElementById('activeAlbumTitle').innerText   = lastRecommendation.title;
+
+    document.getElementById('activeAlbumTitle').innerText   = album.title;
+    document.getElementById('activeAlbumArtist').innerText = lastRecommendation.artist;
+    document.getElementById('activeAlbumYear').innerText   = lastRecommendation.year || '';
+
     document.getElementById('activeSessionModal').style.display = 'flex';
+    ttInit();
 }
 
 // ===================== LAZY IMAGE LOAD =====================
@@ -546,7 +553,9 @@ function startActiveSession() {
 
     document.getElementById('preSessionModal').style.display = 'none';
 
-    // Populate meta fields
+    resetTimers();
+    
+    // Populate meta field
     const album = currentSessionData.album;
     document.getElementById('activeAlbumTitle').innerText  = album.title;
     document.getElementById('activeAlbumArtist').innerText = album.artists ? album.artists.map(a => a.name).join(', ') : '';

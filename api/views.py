@@ -2,6 +2,7 @@
 import os
 import requests
 from django.shortcuts import render
+from django_ratelimit.decorators import ratelimit
 from django.utils import timezone
 import zoneinfo
 from django.utils.dateparse import parse_datetime
@@ -28,7 +29,7 @@ DISCOGS_HEADERS = {
     'User-Agent': 'CrateDiggerApp/1.0'
 }
 
-
+@ratelimit(key='ip', rate='10/m', block=True)
 @api_view(['POST'])
 def login_user(request):
     discogs_username = request.data.get('discogs_username', '').strip()
@@ -197,11 +198,28 @@ def get_release_details(request, release_id):
     except requests.exceptions.RequestException as e:
         return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+VALID_EMOTIONS = {'stressed', 'happy', 'tired', 'neutral', 'calm', 'sad'}
+VALID_WEATHER  = {'clear', 'cloudy', 'rainy', 'stormy', 'snowy', 'warm', 'cold', ''}
 
 @api_view(['POST'])
 def log_session(request):
     data = request.data
+    pre  = data.get('pre_emotion', '')
+    post = data.get('post_emotion', '')
+    weather = data.get('weather') or ''
 
+    if pre not in VALID_EMOTIONS or post not in VALID_EMOTIONS:
+        return Response({'error': 'Invalid emotion value.'}, status=status.HTTP_400_BAD_REQUEST)
+    if weather not in VALID_WEATHER:
+        return Response({'error': 'Invalid weather value.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clamp durations to non-negative integers
+    side_a = max(0, int(data.get('side_a_duration', 0)))
+    side_b = max(0, int(data.get('side_b_duration', 0)))
+
+    # Enforce notes length server-side (don't rely on maxlength="50" alone)
+    notes = (data.get('notes') or '').strip()[:50]  # hard server-side cap
+    
     album, _ = Album.objects.get_or_create(
         discogs_id=data['album_id'],
         defaults={

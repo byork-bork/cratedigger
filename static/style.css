@@ -983,6 +983,7 @@ button {
     overflow: visible;
     user-select: none;
     box-shadow: var(--shadow-raised-light);
+    background: linear-gradient(145deg, #f1efe7, #dddcd6);
 }
 
 /* Glow ring that pulses on the record when playing */
