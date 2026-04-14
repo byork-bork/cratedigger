@@ -969,18 +969,32 @@ button {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    border-radius: 14px;
-    background: var(--bg);
+    padding: 16px;
+    border-radius: 18px;
+    background: var(#c5c3c1);
     box-shadow: var(--shadow-inset);
 }
 
 .as-turntable-svg {
+    border-radius: 14px;
     width: 100%;
-    max-width: 340px;
+    max-width: 360px;
     height: auto;
     overflow: visible;
     user-select: none;
+    box-shadow: var(--shadow-raised-light);
+}
+
+/* Glow ring that pulses on the record when playing */
+#ttRecordGroup.tt-playing #ttRecord {
+    filter: drop-shadow(0 0 8px rgba(200, 49, 26, 0.25))
+            drop-shadow(0 0 18px rgba(0, 0, 0, 0.45));
+    transition: filter 0.6s ease;
+}
+
+#ttRecordGroup #ttRecord {
+    filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
+    transition: filter 0.6s ease;
 }
 
 .as-timer-row {

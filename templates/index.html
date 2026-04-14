@@ -412,36 +412,114 @@
             </div>
 
             <!-- Turntable SVG -->
+            <!-- All elements share a single center: cx=148, cy=142 -->
+            <!-- Tonearm pivot: 284,36  NEEDLE_LEN=158 -->
             <div class="as-turntable-area">
-                <svg id="turntableSvg" class="as-turntable-svg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+                <svg id="turntableSvg" class="as-turntable-svg" viewBox="0 0 340 288" xmlns="http://www.w3.org/2000/svg">
                     <defs>
+                        <!-- ── Record vinyl gradient ── -->
                         <radialGradient id="recGrad" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#2a2a2a"/>
-                            <stop offset="40%" stop-color="#1a1a1a"/>
-                            <stop offset="100%" stop-color="#0d0d0d"/>
+                            <stop offset="0%"   stop-color="#2e2e2e"/>
+                            <stop offset="35%"  stop-color="#1a1a1a"/>
+                            <stop offset="100%" stop-color="#090909"/>
                         </radialGradient>
+
+                        <!-- ── Shine: crescent highlight that spins WITH the record ── -->
+                        <radialGradient id="shineGrad" cx="34%" cy="30%" r="52%">
+                            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.22"/>
+                            <stop offset="45%"  stop-color="#ffffff" stop-opacity="0.07"/>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                        </radialGradient>
+
+                        <!-- ── Neumorphic platter: warm-sand base ── -->
+                        <radialGradient id="platterGrad" cx="38%" cy="35%" r="65%">
+                            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.85"/>
+                            <stop offset="45%"  stop-color="#f0ede4"/>
+                            <stop offset="100%" stop-color="#d8d4cb"/>
+                        </radialGradient>
+
+                        <!-- ── Platter rim bevel ── -->
+                        <radialGradient id="platterRimGrad" cx="38%" cy="35%" r="65%">
+                            <stop offset="0%"   stop-color="#e8e4da"/>
+                            <stop offset="100%" stop-color="#c0bcb4"/>
+                        </radialGradient>
+
+                        <!-- ── Felt mat ── -->
+                        <radialGradient id="feltGrad" cx="42%" cy="40%" r="58%">
+                            <stop offset="0%"   stop-color="#2e3d2e"/>
+                            <stop offset="70%"  stop-color="#1e2c1e"/>
+                            <stop offset="100%" stop-color="#161f16"/>
+                        </radialGradient>
+
+                        <!-- ── Spindle cap gradient ── -->
+                        <radialGradient id="spindleGrad" cx="35%" cy="32%" r="60%">
+                            <stop offset="0%"   stop-color="#c0bfbc"/>
+                            <stop offset="100%" stop-color="#5a5855"/>
+                        </radialGradient>
+
+                        <!-- Clip path locked to record center 148,142 -->
                         <clipPath id="recClip">
-                            <ellipse cx="140" cy="130" rx="108" ry="108"/>
+                            <circle cx="148" cy="142" r="108"/>
                         </clipPath>
+
+                        <!-- ── Drop-shadow filter for the platter ── -->
+                        <filter id="platterShadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="5"  dy="7"  stdDeviation="10" flood-color="#9a9690" flood-opacity="0.55"/>
+                            <feDropShadow dx="-3" dy="-4" stdDeviation="7"  flood-color="#ffffff" flood-opacity="0.70"/>
+                        </filter>
                     </defs>
 
-                    <!-- Platter shadow -->
-                    <circle cx="140" cy="130" r="112" fill="#333" opacity="0.12"/>
-                    <!-- Replace the record, grooves, and label section with this: -->
+                    <!-- ══ NEUMORPHIC PLATTER — center 148,142 ══ -->
+                    <circle cx="148" cy="145" r="124" fill="#b8b4ac" opacity="0.55"/>
+                    <circle cx="145" cy="139" r="124" fill="#ffffff"  opacity="0.40"/>
+                    <circle cx="148" cy="142" r="123" fill="url(#platterRimGrad)" filter="url(#platterShadow)"/>
+                    <circle cx="148" cy="142" r="119" fill="#c8c4bc" opacity="0.45"/>
+                    <circle cx="148" cy="142" r="117" fill="url(#platterGrad)"/>
+                    <circle cx="148" cy="142" r="115" fill="none" stroke="#d0ccc4" stroke-width="0.6" opacity="0.7"/>
+                    <circle cx="148" cy="142" r="110" fill="none" stroke="#c8c4bc" stroke-width="0.5" opacity="0.5"/>
+
+                    <!-- ══ FELT MAT — center 148,142 ══ -->
+                    <circle cx="148" cy="142" r="112" fill="url(#feltGrad)" opacity="0.92"/>
+                    <circle cx="148" cy="142" r="108" fill="none" stroke="#3a4e3a" stroke-width="0.8" opacity="0.35"/>
+                    <circle cx="148" cy="142" r="100" fill="none" stroke="#3a4e3a" stroke-width="0.5" opacity="0.25"/>
+                    <circle cx="148" cy="142" r="88"  fill="none" stroke="#3a4e3a" stroke-width="0.5" opacity="0.20"/>
+
+                    <!-- ══ RECORD GROUP — spins around 148,142 ══ -->
+                    <!-- JS does: recordGroup.setAttribute('transform', `rotate(deg 148 142)`) -->
                     <g id="ttRecordGroup" style="cursor:pointer;">
-                        <ellipse id="ttRecord" cx="140" cy="130" rx="108" ry="108" fill="url(#recGrad)"/>
+                        <!-- Vinyl disc -->
+                        <circle id="ttRecord" cx="148" cy="142" r="108" fill="url(#recGrad)"/>
+                        <!-- Grooves (populated by ttBuildGrooves, clipped to disc) -->
                         <g id="ttGrooves" clip-path="url(#recClip)"></g>
-                        <circle cx="140" cy="130" r="32" fill="#c8311a"/>
-                        <circle cx="140" cy="130" r="22" fill="#1a1a1a"/>
-                        <circle cx="140" cy="130" r="4" fill="#555"/>
+                        <!-- Shine rotates WITH the record — creates a sweeping gloss effect -->
+                        <circle id="ttShine" cx="148" cy="142" r="108"
+                                fill="url(#shineGrad)"
+                                clip-path="url(#recClip)"
+                                pointer-events="none"/>
+                        <!-- Label -->
+                        <circle cx="148" cy="142" r="32" fill="#c8311a"/>
+                        <circle cx="148" cy="142" r="30" fill="none" stroke="#a02810" stroke-width="0.8" opacity="0.6"/>
+                        <circle cx="148" cy="142" r="25" fill="none" stroke="#a02810" stroke-width="0.5" opacity="0.4"/>
+                        <circle cx="148" cy="142" r="22" fill="#1a1a1a"/>
+                        <!-- Spindle hole -->
+                        <circle cx="148" cy="142" r="4.5" fill="#111"/>
                     </g>
 
-                    <!-- Tonearm -->
+                    <!-- ══ SPINDLE — stationary, above record ══ -->
+                    <circle cx="148" cy="142" r="5"   fill="url(#spindleGrad)"/>
+                    <circle cx="147" cy="141" r="1.8" fill="#e0dfdc" opacity="0.7"/>
+
+                    <!-- ══ TONEARM — pivot at 284,36 ══ -->
                     <g id="ttTonearm" style="cursor:grab;">
-                        <line id="ttArmLine" x1="265" y1="32" x2="192" y2="148" stroke="#999" stroke-width="3" stroke-linecap="round"/>
-                        <circle cx="265" cy="32" r="10" fill="#e0ddd6" stroke="#aaa" stroke-width="1"/>
-                        <rect id="ttHeadshell" x="182" y="141" width="20" height="10" rx="3" fill="#666"/>
-                        <line id="ttNeedle" x1="192" y1="148" x2="188" y2="158" stroke="#888" stroke-width="1.5" stroke-linecap="round"/>
+                        <!-- Arm body (drawn first, pivot cap sits on top) -->
+                        <line id="ttArmLine"      x1="300" y1="36" x2="300" y2="194" stroke="#aaa9a6" stroke-width="3.5" stroke-linecap="round"/>
+                        <line id="ttArmHighlight" x1="300" y1="36" x2="300" y2="194" stroke="#d8d5ce" stroke-width="1.2" stroke-linecap="round" opacity="0.65"/>
+                        <!-- Headshell and needle (positioned at tip by JS) -->
+                        <rect id="ttHeadshell" x="290" y="157" width="20" height="10" rx="3" fill="#7a7974" stroke="#5a5854" stroke-width="0.6"/>
+                        <line id="ttNeedle"    x1="300" y1="189" x2="300" y2="194" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+                        <!-- Pivot cap drawn last so it sits on top of arm -->
+                        <circle cx="300" cy="36" r="13" fill="#d8d4cc" stroke="#b0aca4" stroke-width="1"/>
+                        <circle cx="300" cy="36" r="6"  fill="#e8e4dc" stroke="#c0bcb4" stroke-width="0.8"/>
                     </g>
                 </svg>
             </div>

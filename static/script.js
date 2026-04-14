@@ -440,11 +440,11 @@ let currentSessionData = {
 
 // ---- Turntable constants ----
 const TT = {
-    RECORD_CX: 140, RECORD_CY: 130, RECORD_R: 108,
-    PIVOT_X: 265,   PIVOT_Y: 32,
-    NEEDLE_LEN: 150,
+    RECORD_CX: 148, RECORD_CY: 142, RECORD_R: 108,
+    PIVOT_X: 300,   PIVOT_Y: 36,
+    NEEDLE_LEN: 165,
     REST_ANGLE:  90 * Math.PI / 180,
-    PLAY_ANGLE:  115 * Math.PI / 180,
+    PLAY_ANGLE:  117 * Math.PI / 180,
     LIFT_ANGLE:  90 * Math.PI / 180,
 };
 
@@ -574,24 +574,36 @@ function ttIsNearRecord(angle) {
 function ttSetAngle(angle) {
     tt.currentAngle = angle;
     const tip = ttGetNeedleTip(angle);
-    const armLine   = document.getElementById('ttArmLine');
-    const headshell = document.getElementById('ttHeadshell');
-    const needle    = document.getElementById('ttNeedle');
+    const armLine      = document.getElementById('ttArmLine');
+    const armHighlight = document.getElementById('ttArmHighlight');
+    const headshell    = document.getElementById('ttHeadshell');
+    const needle       = document.getElementById('ttNeedle');
 
-    armLine.setAttribute('x1', TT.PIVOT_X);
-    armLine.setAttribute('y1', TT.PIVOT_Y);
-    armLine.setAttribute('x2', tip.x);
-    armLine.setAttribute('y2', tip.y);
+    // Both arm lines share the same endpoints
+    [armLine, armHighlight].forEach(el => {
+        if (!el) return;
+        el.setAttribute('x1', TT.PIVOT_X);
+        el.setAttribute('y1', TT.PIVOT_Y);
+        el.setAttribute('x2', tip.x);
+        el.setAttribute('y2', tip.y);
+    });
 
+    // Headshell: rect is 20×10, center it on the tip point, then rotate to match arm angle
     const deg = angle * 180 / Math.PI;
-    headshell.setAttribute('transform', `rotate(${deg + 53} ${tip.x} ${tip.y})`);
+    // Position rect so its center sits at tip
     headshell.setAttribute('x', tip.x - 10);
     headshell.setAttribute('y', tip.y - 5);
-    needle.setAttribute('transform', `rotate(${deg + 53} ${tip.x} ${tip.y})`);
+    // Rotate around the tip so the headshell is perpendicular to the arm
+    headshell.setAttribute('transform', `rotate(${deg - 90} ${tip.x} ${tip.y})`);
+
+    // Needle drops straight down from the tip in the arm's direction
+    const nx = tip.x + Math.cos(angle) * 10;
+    const ny = tip.y + Math.sin(angle) * 10;
     needle.setAttribute('x1', tip.x);
     needle.setAttribute('y1', tip.y);
-    needle.setAttribute('x2', tip.x + Math.cos(angle + Math.PI / 2) * 8);
-    needle.setAttribute('y2', tip.y + Math.sin(angle + Math.PI / 2) * 8);
+    needle.setAttribute('x2', nx);
+    needle.setAttribute('y2', ny);
+    needle.setAttribute('transform', '');
 }
 
 function ttAnimateArm(fromAngle, toAngle, duration, onDone) {
@@ -609,16 +621,19 @@ function ttAnimateArm(fromAngle, toAngle, duration, onDone) {
 function ttSpinRecord() {
     if (!tt.isPlaying || tt.isPaused) return;
     tt.recordRotation += 1.2;
-    const rec    = document.getElementById('ttRecord');
-    const grooves = document.getElementById('ttGrooves');
-    rec.setAttribute('transform',    `rotate(${tt.recordRotation} 140 130)`);
-    grooves.setAttribute('transform', `rotate(${tt.recordRotation} 140 130)`);
+    const group = document.getElementById('ttRecordGroup');
+    // Rotate the entire group — record, grooves, shine, label all spin together
+    group.setAttribute('transform', `rotate(${tt.recordRotation} 148 142)`);
     tt.recordAnimFrame = requestAnimationFrame(ttSpinRecord);
 }
 
-function ttStartSpin() { if (!tt.recordAnimFrame) ttSpinRecord(); }
+function ttStartSpin() {
+    if (!tt.recordAnimFrame) ttSpinRecord();
+    document.getElementById('ttRecordGroup').classList.add('tt-playing');
+}
 function ttStopSpin()  {
     if (tt.recordAnimFrame) { cancelAnimationFrame(tt.recordAnimFrame); tt.recordAnimFrame = null; }
+    document.getElementById('ttRecordGroup').classList.remove('tt-playing');
 }
 
 function ttStartTimer() {
@@ -658,7 +673,7 @@ function ttSetPlayUI(playing) {
 
 function ttAnimateFlip(onDone) {
     const group = document.getElementById('ttRecordGroup');
-    const cx = 140, cy = 130, r = TT.RECORD_R;
+    const cx = 148, cy = 142, r = TT.RECORD_R;
     const start = performance.now(), dur = 600;
 
     function step(now) {
@@ -698,10 +713,10 @@ function ttBuildGrooves() {
     if (!g || g.childElementCount > 0) return;
     for (let r = 42; r <= 102; r += 5) {
         const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('cx', 140); c.setAttribute('cy', 130); c.setAttribute('r', r);
+        c.setAttribute('cx', 148); c.setAttribute('cy', 142); c.setAttribute('r', r);
         c.setAttribute('fill', 'none');
-        c.setAttribute('stroke', 'rgba(255,255,255,0.04)');
-        c.setAttribute('stroke-width', '1');
+        c.setAttribute('stroke', 'rgba(255,255,255,0.045)');
+        c.setAttribute('stroke-width', '1.2');
         g.appendChild(c);
     }
 }
@@ -741,10 +756,9 @@ function handleFlip() {
         document.getElementById('activeSideLabel').innerText = tt.currentSide;
 
         // Reset record rotation visually
+        const group  = document.getElementById('ttRecordGroup');
         const rec    = document.getElementById('ttRecord');
-        const grooves = document.getElementById('ttGrooves');
-        rec.setAttribute('transform', '');
-        grooves.setAttribute('transform', '');
+        group.setAttribute('transform', '');
         tt.recordRotation = 0;
 
         ttAnimateFlip(() => {
@@ -827,17 +841,15 @@ function ttInit() {
     document.getElementById('activeSideLabel').innerText = 'A';
     ttUpdateTimerDisplay();
 
-    const rec    = document.getElementById('ttRecord');
-    const grooves = document.getElementById('ttGrooves');
-    rec.setAttribute('transform', '');
-    rec.setAttribute('fill', 'url(#recGrad)');
-    grooves.setAttribute('transform', '');
-
-    // Replace rec.onclick = ... with:
+    // Reset the whole record group transform (record + grooves + shine + label)
     const group = document.getElementById('ttRecordGroup');
-    group.onclick = () => {
-        handleFlip();
-    };
+    group.setAttribute('transform', '');
+    group.classList.remove('tt-playing');
+
+    // Reset the record fill in case flip animation left it dark
+    document.getElementById('ttRecord').setAttribute('fill', 'url(#recGrad)');
+
+    group.onclick = () => { handleFlip(); };
 
     // Tonearm drag
     const arm = document.getElementById('ttTonearm');
