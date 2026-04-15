@@ -71,8 +71,10 @@
                             Discogs
                         </a>
                         <div class="header-profile-wrap" id="headerProfileWrap">
-                            <button class="header-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
-                                👤 <span id="headerUsernameDisplay"></span>
+                            <button class="header-nav-btn profile-nav-btn" id="profileBtn" onclick="toggleProfileDropdown(event)">
+                                <img id="headerAvatarImg" class="header-avatar" src="" alt="" style="display:none;" aria-hidden="true"/>
+                                <span id="headerAvatarFallback">👤</span>
+                                <span id="headerUsernameDisplay"></span>
                             </button>
                             <div class="profile-dropdown" id="profileDropdown">
                                 <button class="profile-dropdown-item" onclick="handleLogout()">Log Out</button>

@@ -44,7 +44,7 @@ async function handleLogin() {
 
         // Success — store user and unlock app
         currentUser = data.user;
-        unlockApp(currentUser.discogs_username);
+        unlockApp(currentUser.discogs_username, currentUser.avatar_url);
 
         // Directly store the releases from the login response and display them
         allReleases = data.releases;
@@ -67,7 +67,7 @@ function showLoginError(msg) {
     errorEl.style.display = 'block';
 }
 
-function unlockApp(username) {
+function unlockApp(username, avatarUrl) {
     // Hide login overlay
     const overlay = document.getElementById('loginModal');
     overlay.classList.add('hidden');
@@ -80,6 +80,20 @@ function unlockApp(username) {
     // Show username in header
     document.getElementById('headerUsernameDisplay').textContent = username;
     document.getElementById('headerUser').style.display = 'flex';
+
+    // Show avatar if available, otherwise keep fallback emoji
+    const avatarImg      = document.getElementById('headerAvatarImg');
+    const avatarFallback = document.getElementById('headerAvatarFallback');
+    if (avatarUrl) {
+        avatarImg.src = avatarUrl;
+        avatarImg.style.display = 'block';
+        avatarFallback.style.display = 'none';
+        // If the image fails to load (private/expired URL), fall back to emoji
+        avatarImg.onerror = () => {
+            avatarImg.style.display = 'none';
+            avatarFallback.style.display = '';
+        };
+    }
 
     // Remove overlay from DOM after transition
     setTimeout(() => overlay.remove(), 500);

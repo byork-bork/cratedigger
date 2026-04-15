@@ -45,6 +45,20 @@ def login_user(request):
     page = 1
     url = f"https://api.discogs.com/users/{discogs_username}/collection/folders/0/releases"
 
+    # Fetch the Discogs user profile to get the avatar URL.
+    # Done before the collection loop so a 404 here also surfaces a clear error.
+    avatar_url = None
+    try:
+        profile_resp = requests.get(
+            f"https://api.discogs.com/users/{discogs_username}",
+            headers=DISCOGS_HEADERS,
+            timeout=10,
+        )
+        if profile_resp.ok:
+            avatar_url = profile_resp.json().get('avatar_url') or None
+    except requests.exceptions.RequestException:
+        pass  # Avatar is non-critical — proceed without it
+
     try:
         while True:
             params = {'page': page, 'per_page': 100, 'sort': sort, 'sort_order': 'desc'}
@@ -75,10 +89,14 @@ def login_user(request):
         username=discogs_username,
         defaults={'email': ''}
     )
-    UserProfile.objects.get_or_create(
+    profile, _ = UserProfile.objects.get_or_create(
         user=user,
         defaults={'discogs_username': discogs_username}
     )
+    # Always refresh the avatar in case it changed since last login
+    if avatar_url and profile.avatar_url != avatar_url:
+        profile.avatar_url = avatar_url
+        profile.save(update_fields=['avatar_url'])
 
     # Upsert every album and collection membership into the DB at login.
     # The collection endpoint already returns genres/styles for most releases,
@@ -135,6 +153,7 @@ def login_user(request):
             'id':               user.id,
             'username':         user.username,
             'discogs_username': discogs_username,
+            'avatar_url':       avatar_url,
             'created':          user_created,
         },
         'releases': all_releases

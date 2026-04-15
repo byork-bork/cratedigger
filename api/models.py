@@ -14,11 +14,12 @@ EMOTION_CHOICES = [
 
 class UserProfile(models.Model):
     """
-    Extends Django's built-in User to store the Discogs username.
+    Extends Django's built-in User to store the Discogs username and avatar.
     Created automatically on first login.
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     discogs_username = models.CharField(max_length=255, unique=True)
+    avatar_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
