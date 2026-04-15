@@ -115,6 +115,10 @@ function closeLogoutModal() {
     document.getElementById('logoutConfirmModal').style.display = 'none';
 }
 
+document.getElementById('logoutConfirmModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAllModals();
+});
+
 // Rename the old logout logic to confirmLogout():
 function confirmLogout() {
     currentUser = null;
@@ -181,7 +185,9 @@ async function loadMoodTags() {
         try {
             const res = await fetch(`/api/mood-tags/?discogs_id=${id}`);
             const data = await res.json();
-            if (data.mood_tags && data.mood_tags.length > 0) {
+            
+            if (data.mood_tags) {
+                item.mood_tags = data.mood_tags.map(t => t.emotion.toLowerCase());
                 renderMoodTags(id, data.mood_tags);
             }
         } catch (_) {}
@@ -211,14 +217,17 @@ function applyFilters() {
         });
     }
 
-    const activeMoodFilter = document.querySelector('.mood-filter-btn.selected');
-    if (activeMoodFilter) {
-        const filterMood = activeMoodFilter.dataset.mood;
+    const activeButtons = document.querySelectorAll('.mood-filter-btn.selected');
+    
+    if (activeButtons.length > 0) {
+        const selectedMoods = Array.from(activeButtons).map(btn => btn.dataset.mood.toLowerCase());
+
         filtered = filtered.filter(item => {
-            const tagEl = document.getElementById(`mood-tag-${item.basic_information.id}`);
-            if (!tagEl) return false;
-            return Array.from(tagEl.querySelectorAll('.mood-badge'))
-                .some(badge => badge.textContent === filterMood);
+            // Look at the data object, NOT the HTML
+            const albumMoods = item.mood_tags || []; 
+
+            // Check if every selected filter exists in the album's mood array
+            return selectedMoods.every(neededMood => albumMoods.includes(neededMood));
         });
     }
 
@@ -267,9 +276,7 @@ function handleSortClick(btn) {
 
 // ===================== MOOD FILTER =====================
 function handleMoodFilterClick(btn) {
-    const already = btn.classList.contains('selected');
-    document.querySelectorAll('.mood-filter-btn').forEach(b => b.classList.remove('selected'));
-    if (!already) btn.classList.add('selected');
+    btn.classList.toggle('selected');
     applyFilters();
 }
 
@@ -1064,6 +1071,21 @@ function renderSessionTable() {
     const search = (document.getElementById('hvSearchInput').value || '').toLowerCase();
     let rows = [...(historyData.sessions || [])];
 
+    if (historyPeriod !== 'all') {
+        const now = new Date();
+        rows = rows.filter(s => {
+            const sessionDate = new Date(s.timestamp);
+            // Calculate the difference in days
+            const diffTime = now - sessionDate;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+            if (historyPeriod === 'day')   return diffDays <= 1;  // Last 24 hours
+            if (historyPeriod === 'week')  return diffDays <= 7;  // Last 7 days
+            if (historyPeriod === 'month') return diffDays <= 30; // Last 30 days
+            return true;
+        });
+    }
+
     if (search) {
         rows = rows.filter(s =>
             s.album_title.toLowerCase().includes(search) ||
@@ -1172,6 +1194,7 @@ function closeAllModals() {
     document.getElementById('preSessionModal').style.display   = 'none';
     document.getElementById('activeSessionModal').style.display = 'none';
     document.getElementById('postSessionModal').style.display  = 'none';
+    document.getElementById('logoutConfirmModal').style.display  = 'none';
     resetTimers();
 }
 
