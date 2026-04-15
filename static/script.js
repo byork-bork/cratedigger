@@ -3,6 +3,7 @@ let currentUser = null; // { id, username, discogs_username }
 let allReleases = [];
 let sortDirection = 'asc';
 let lastSortValue = 'added';
+let isSessionActive = false;
 
 // ===================== LOGIN =====================
 async function handleLogin() {
@@ -412,6 +413,7 @@ function startSessionFromRecommendation() {
     const album = currentSessionData.album;
 
     resetTimers();
+    updateSidebarPlayback();
     document.getElementById('recommendModal').style.display = 'none';
 
     document.getElementById('activeAlbumTitle').innerText   = album.title;
@@ -420,6 +422,9 @@ function startSessionFromRecommendation() {
 
     document.getElementById('activeSessionModal').style.display = 'flex';
     ttInit();
+
+    isSessionActive = true;
+    updateSidebarSession();
 }
 
 // ===================== LAZY IMAGE LOAD =====================
@@ -575,6 +580,7 @@ function startActiveSession() {
     document.getElementById('preSessionModal').style.display = 'none';
 
     resetTimers();
+    updateSidebarPlayback();
     
     // Populate meta field
     const album = currentSessionData.album;
@@ -584,6 +590,42 @@ function startActiveSession() {
 
     document.getElementById('activeSessionModal').style.display = 'flex';
     ttInit();
+
+    isSessionActive = true;
+    updateSidebarSession();
+}
+
+function updateSidebarSession() {
+    if (!currentSessionData.album) return;
+
+    const album = currentSessionData.album;
+
+    document.getElementById('activeSessionSidebar').style.display = 'block';
+
+    document.getElementById('sidebarSessionCover').src = album.cover_image;
+    document.getElementById('sidebarSessionTitle').innerText = album.title;
+    document.getElementById('sidebarSessionArtist').innerText =
+        album.artists?.map(a => a.name).join(', ') || '';
+    document.getElementById('sidebarSessionYear').innerText =
+        album.year || '';
+}
+
+function updateSidebarPlayback() {
+    if (!isSessionActive) return;
+
+    const totalTime = currentSessionData.timeA + currentSessionData.timeB;
+
+    document.getElementById('sidebarSessionTimer').innerText =
+        formatTime(totalTime);
+}
+
+function minimizeSession() {
+    document.getElementById('activeSessionModal').style.display = 'none';
+}
+
+function restoreActiveSession() {
+    if (!isSessionActive) return;
+    document.getElementById('activeSessionModal').style.display = 'flex';
 }
 
 // ---- Turntable helpers ----
@@ -694,6 +736,7 @@ function ttUpdateTimerDisplay() {
     elB.innerText  = formatTime(currentSessionData.timeB);
     elA.className  = 'as-timer-val' + (tt.isPlaying && !tt.isPaused && tt.currentSide === 'A' ? ' as-timer-active' : '');
     elB.className  = 'as-timer-val' + (tt.isPlaying && !tt.isPaused && tt.currentSide === 'B' ? ' as-timer-active' : '');
+    updateSidebarPlayback();
 }
 
 function ttSetPlayUI(playing) {
@@ -923,6 +966,10 @@ function endActiveSession() {
 
 // ===================== SAVE SESSION =====================
 async function submitFinalSession() {
+    isSessionActive = false;
+    document.getElementById('activeSessionSidebar').style.display = 'none';
+    document.getElementById('sidebarSessionTimer').innerText = '00:00';
+
     const selected = document.querySelector('input[name="postEmotionRadio"]:checked');
     currentSessionData.postEmotion = selected ? selected.value : 'neutral';
     

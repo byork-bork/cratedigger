@@ -638,15 +638,15 @@ button {
         inset 2px 2px 0px rgba(255,255,255,0.8),
         inset -1px -1px 0px rgba(0,0,0,0.05);
     transition:
-        transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+        transform 0.3s,
         box-shadow 0.3s ease;
 }
 
 .card:hover {
     transform: translateY(-6px) scale(1.04);
     box-shadow:
-        10px 10px 22px var(--neu-dark-light),
-        -10px -10px 22px var(--neu-light-light);
+        8px 8px 18px var(--neu-dark-light),
+        -8px -8px 18px var(--neu-light-light);
 }
 
 .card img {
@@ -822,6 +822,161 @@ button {
 .mood-sad       { background: linear-gradient(145deg, #4174d1, #194783); color: #fff; }
 .mood-neutral   { background: linear-gradient(145deg, #9fb1b2, #717e7e); color: #fff; }
 
+/* ===================== ACTIVE SESSION SIDEBAR (VERTICAL) ===================== */
+.active-session-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 14px;
+    border-radius: 14px;
+    max-width: 220px;
+    margin: 0 auto;
+    background: var(--bg);
+    cursor: pointer;
+
+    box-shadow:
+        var(--shadow-raised-light),
+        inset 2px 2px 0px rgba(255,255,255,0.7),
+        inset -1px -1px 0px rgba(0,0,0,0.05);
+
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.active-session-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        8px 8px 18px var(--neu-dark-light),
+        -8px -8px 18px var(--neu-light-light);
+}
+
+/* Bigger, centered album art */
+.active-session-cover {
+    width: 100%;
+    max-width: 180px;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    object-fit: cover;
+
+    margin-bottom: 10px;
+
+    box-shadow:
+        4px 4px 10px var(--neu-dark-light),
+        -2px -2px 6px var(--neu-light-light);
+}
+
+/* Text stack */
+.active-session-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+}
+
+.active-session-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.active-session-artist {
+    font-size: 13px;
+    color: #777;
+    margin: 0 0 6px;
+}
+
+.active-session-year {
+    font-size: 12px;
+    background: var(--bg);
+    color: #666;
+    padding: 3px 10px;
+    border-radius: 20px;
+    width: fit-content;
+    box-shadow: var(--shadow-raised-light);
+}
+
+/* Now playing centered */
+.now-playing-indicator {
+    font-size: 11px;
+    margin-top: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    color: #444;
+}
+
+
+.pulse-dot {
+    width: 6px;
+    height: 6px;
+    background: #2ecc71;
+    border-radius: 50%;
+    animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+    0%   { transform: scale(1); opacity: 1; }
+    50%  { transform: scale(1.6); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.sidebar-session-meta {
+    font-size: 11px;
+    color: #555;
+    margin-top: 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.meta-separator {
+    opacity: 0.6;
+}
+
+/* ===================== INACTIVE SESSION SIDEBAR PLACEHOLDER ===================== */
+.placeholder-cover {
+    width: 100%;
+    max-width: 180px;
+    aspect-ratio: 1 / 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: linear-gradient(145deg, #e6e6e6, #ffffff);
+
+    box-shadow:
+        inset 3px 3px 6px rgba(0,0,0,0.08),
+        inset -3px -3px 6px rgba(255,255,255,0.8);
+}
+
+.placeholder-icon {
+    font-size: 28px;
+    opacity: 0.6;
+}
+
+/* Inactive state text */
+.active-session-card.inactive .active-session-title {
+    color: #777;
+    font-weight: 600;
+}
+
+.active-session-card.inactive .active-session-artist {
+    color: #999;
+}
+
 /* ===================== RECOMMENDATION SIDEBAR CARD ===================== */
 .recommendation-result {
     margin-top: 12px;
@@ -916,6 +1071,7 @@ button {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    position: relative;
 }
 
 .as-album-meta { max-width: 260px; }
@@ -1088,6 +1244,37 @@ button {
     box-shadow:
         6px 6px 14px var(--neu-dark-light),
         -6px -6px 14px var(--neu-light-light);
+}
+
+.session-minimize-btn {
+    position: absolute;
+    left: 50%;
+    top: -8px;
+    transform: translateX(-50%);
+    padding: 2px 18px;
+    font-size: 18px;
+    color: #b1b0af;
+    background: var(--bg);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow:
+        var(--shadow-raised-light),
+        inset 2px 2px 0px rgba(255,255,255,0.7),
+        inset -1px -1px 0px rgba(0,0,0,0.05);
+    transition: box-shadow 0.15s, transform 0.1s;
+    z-index: 2;
+}
+
+.session-minimize-btn:hover {
+    box-shadow:
+        6px 6px 14px var(--neu-dark-light),
+        -6px -6px 14px var(--neu-light-light);
+}
+
+.session-minimize-btn:active {
+    transform: translateX(-50%) scale(0.96); /* keep centering intact */
+    box-shadow: var(--shadow-inset);
 }
 
 /* ===================== PRE-SESSION MODAL ===================== */
