@@ -271,14 +271,25 @@ def log_session(request):
         notes           = data.get('notes', '').strip() or None,
     )
 
-    mood_tag, created = MoodTag.objects.get_or_create(
-        album=album,
-        emotion=data['pre_emotion'],
-        defaults={'count': 1}
-    )
-    if not created:
-        mood_tag.count += 1
-        mood_tag.save()
+    # 1. Find the specific physical copy of the record in their collection
+    try:
+        collection_entry = CollectionEntry.objects.get(user=user, album=album)
+        
+        # 2. Tie the mood to that specific copy
+        mood_tag, created = MoodTag.objects.get_or_create(
+            collection_entry=collection_entry,
+            emotion=data['pre_emotion'],
+            defaults={'count': 1}
+        )
+        
+        if not created:
+            mood_tag.count += 1
+            mood_tag.save()
+
+    except CollectionEntry.DoesNotExist:
+        # If they don't own the record, we can't save a mood for it under Approach 2.
+        # You can either pass, or return an error message to the frontend.
+        pass
 
     return Response(ListeningSessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
@@ -444,22 +455,31 @@ def get_history(request):
     })
 
 
+from django.contrib.auth.models import User
+
 @api_view(['GET'])
 def get_mood_tags(request):
     discogs_id = request.GET.get('discogs_id')
+    user_id = request.GET.get('user_id') # <-- We must now ask for the user
 
-    if not discogs_id:
+    if not discogs_id or not user_id:
         return Response(
-            {'error': 'discogs_id parameter is required'},
+            {'error': 'Both discogs_id and user_id parameters are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
         album = Album.objects.get(discogs_id=discogs_id)
-    except Album.DoesNotExist:
+        user = User.objects.get(id=user_id)
+    except (Album.DoesNotExist, User.DoesNotExist):
         return Response({'mood_tags': []})
 
-    tags = MoodTag.objects.filter(album=album).order_by('-count')
+    # The magic double-underscore syntax looking through the CollectionEntry
+    tags = MoodTag.objects.filter(
+        collection_entry__album=album, 
+        collection_entry__user=user
+    ).order_by('-count')
+
     return Response({
         'mood_tags': [
             {'emotion': t.emotion, 'count': t.count}

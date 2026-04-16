@@ -138,26 +138,34 @@
 
                 <hr class="sidebar-divider">
 
-                <section class="sidebar-section" id="activeSessionSidebar" style="display:none;">
+                <section class="sidebar-section" id="activeSessionSidebar">
                     <h2 class="sidebar-heading">Active Session</h2>
+                    
+                    <div class="active-session-card" id="activeSessionCard" onclick="restoreActiveSession()">
+                        <div id="sessionPlaceholder" class="session-placeholder">
+                            <div class="placeholder-icon">🎧</div>
+                            <p class="placeholder-title">No Active Session</p>
+                            <p class="placeholder-subtext">Start listening to an album</p>
+                        </div>
 
-                    <div class="active-session-card" onclick="restoreActiveSession()">
-                        <img id="sidebarSessionCover" src="" class="active-session-cover">
+                        <div id="sessionContent" style="display:none;">
+                            <img id="sidebarSessionCover" src="" class="active-session-cover">
 
-                        <div class="active-session-info">
-                            <p id="sidebarSessionTitle" class="active-session-title"></p>
-                            <p id="sidebarSessionArtist" class="active-session-artist"></p>
-                            <span id="sidebarSessionYear" class="active-session-year"></span>
+                            <div class="active-session-info">
+                                <p id="sidebarSessionTitle" class="active-session-title"></p>
+                                <p id="sidebarSessionArtist" class="active-session-artist"></p>
+                                <span id="sidebarSessionYear" class="active-session-year"></span>
 
-                            <div class="now-playing-indicator">
-                                <span class="pulse-dot"></span>
-                                Now Playing
-                            </div>
+                                <div class="now-playing-indicator">
+                                    <span class="pulse-dot"></span>
+                                    Now Playing
+                                </div>
 
-                            <div class="sidebar-session-meta">
-                                <span>Total time</span>
-                                <span class="meta-separator">•</span>
-                                <span id="sidebarSessionTimer">00:00</span>
+                                <div class="sidebar-session-meta">
+                                    <span>Total time</span>
+                                    <span class="meta-separator">•</span>
+                                    <span id="sidebarSessionTimer">00:00</span>
+                                </div>
                             </div>
                         </div>
                     </div>

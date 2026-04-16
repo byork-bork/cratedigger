@@ -943,38 +943,32 @@ button {
     opacity: 0.6;
 }
 
-/* ===================== INACTIVE SESSION SIDEBAR PLACEHOLDER ===================== */
-.placeholder-cover {
-    width: 100%;
-    max-width: 180px;
-    aspect-ratio: 1 / 1;
-
+/* ===================== PLACEHOLDER ===================== */
+.session-placeholder {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 
-    border-radius: 10px;
-
-    background: linear-gradient(145deg, #e6e6e6, #ffffff);
-
-    box-shadow:
-        inset 3px 3px 6px rgba(0,0,0,0.08),
-        inset -3px -3px 6px rgba(255,255,255,0.8);
+    padding: 20px 10px;
+    text-align: center;
+    color: #777;
 }
 
 .placeholder-icon {
     font-size: 28px;
-    opacity: 0.6;
+    margin-bottom: 8px;
+    opacity: 0.7;
 }
 
-/* Inactive state text */
-.active-session-card.inactive .active-session-title {
-    color: #777;
+.placeholder-title {
+    font-size: 13px;
     font-weight: 600;
 }
 
-.active-session-card.inactive .active-session-artist {
-    color: #999;
+.placeholder-subtext {
+    font-size: 11px;
+    opacity: 0.8;
 }
 
 /* ===================== RECOMMENDATION SIDEBAR CARD ===================== */

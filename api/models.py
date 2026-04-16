@@ -62,15 +62,15 @@ class CollectionEntry(models.Model):
 
 
 class MoodTag(models.Model):
-    album = models.ForeignKey(Album, on_delete=models.CASCADE, related_name='mood_tags')
+    collection_entry = models.ForeignKey(CollectionEntry, on_delete=models.CASCADE, related_name='mood_tags')
     emotion = models.CharField(max_length=100, choices=EMOTION_CHOICES)
     count = models.IntegerField(default=1)
 
     class Meta:
-        unique_together = ('album', 'emotion')
+        unique_together = ('collection_entry', 'emotion')
 
     def __str__(self):
-        return f"{self.album.title} — {self.emotion} x{self.count}"
+        return f"{self.collection_entry.user.username}'s copy of {self.collection_entry.album.title} — {self.emotion} x{self.count}"
 
 
 class ListeningSession(models.Model):

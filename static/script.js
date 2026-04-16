@@ -195,10 +195,12 @@ function displayResults(releases) {
 
 // ===================== MOOD TAGS =====================
 async function loadMoodTags() {
+    if (!currentUser) return;
+    
     for (const item of allReleases) {
         const id = item.basic_information.id;
         try {
-            const res = await fetch(`/api/mood-tags/?discogs_id=${id}`);
+            const res = await fetch(`/api/mood-tags/?discogs_id=${id}&user_id=${currentUser.id}`);
             const data = await res.json();
             
             if (data.mood_tags) {
@@ -424,6 +426,7 @@ function startSessionFromRecommendation() {
     ttInit();
 
     isSessionActive = true;
+    showSessionContent();
     updateSidebarSession();
 }
 
@@ -592,6 +595,7 @@ function startActiveSession() {
     ttInit();
 
     isSessionActive = true;
+    showSessionContent();
     updateSidebarSession();
 }
 
@@ -599,8 +603,6 @@ function updateSidebarSession() {
     if (!currentSessionData.album) return;
 
     const album = currentSessionData.album;
-
-    document.getElementById('activeSessionSidebar').style.display = 'block';
 
     document.getElementById('sidebarSessionCover').src = album.cover_image;
     document.getElementById('sidebarSessionTitle').innerText = album.title;
@@ -967,7 +969,7 @@ function endActiveSession() {
 // ===================== SAVE SESSION =====================
 async function submitFinalSession() {
     isSessionActive = false;
-    document.getElementById('activeSessionSidebar').style.display = 'none';
+    showSessionPlaceholder();
     document.getElementById('sidebarSessionTimer').innerText = '00:00';
 
     const selected = document.querySelector('input[name="postEmotionRadio"]:checked');
@@ -997,7 +999,7 @@ async function submitFinalSession() {
         
         if (response.ok) {
             const id = currentSessionData.album.id;
-            const tagRes = await fetch(`/api/mood-tags/?discogs_id=${id}`);
+            const tagRes = await fetch(`/api/mood-tags/?discogs_id=${id}&user_id=${currentUser.id}`);
             const tagData = await tagRes.json();
             if (tagData.mood_tags && tagData.mood_tags.length > 0) {
                 renderMoodTags(id, tagData.mood_tags);
@@ -1266,3 +1268,15 @@ document.getElementById('preSessionModal').addEventListener('click', function(e)
 document.getElementById('recommendModal').addEventListener('click', function(e) {
     if (e.target === this) closeAllModals();
 });
+
+function showSessionPlaceholder() {
+    document.getElementById('sessionPlaceholder').style.display = 'flex';
+    document.getElementById('sessionContent').style.display = 'none';
+}
+
+function showSessionContent() {
+    document.getElementById('sessionPlaceholder').style.display = 'none';
+    document.getElementById('sessionContent').style.display = 'block';
+}
+
+showSessionPlaceholder();
