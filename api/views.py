@@ -19,7 +19,6 @@ def index(request):
     return render(request, 'index.html')
 
 local_tz = zoneinfo.ZoneInfo('America/Indiana/Indianapolis')
-local_now = timezone.now().astimezone(local_tz)
 
 load_dotenv()
 DISCOGS_TOKEN = os.getenv('DISCOGS_TOKEN')
@@ -327,6 +326,8 @@ def get_recommendation(request):
     if not collection:
         return Response({'recommendation': None, 'message': 'No collection found.'})
 
+    local_now = timezone.now().astimezone(local_tz)
+    
     result = recommend_album(
         user=user,
         mood=mood,

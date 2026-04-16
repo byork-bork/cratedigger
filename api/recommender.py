@@ -782,8 +782,8 @@ def recommend_album(user, mood, weather=None, collection=None, now=None):
     # ------------------------------------------------------------------
     scores = {}
     for candidate in collection:
-        is_unplayed = did not in session_counts
         did = candidate['discogs_id']
+        is_unplayed = did not in session_counts
         genre_score, _ = score_candidate(
             candidate, mood, weather, hour, is_weekend, season,
             target_mood=target_mood,
